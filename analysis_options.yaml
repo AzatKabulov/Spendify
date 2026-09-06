@@ -1,0 +1,36 @@
+# Static analysis configuration for Spendly.
+#
+# Base: flutter_lints (the Flutter-recommended set).
+# On top of that we run in strict mode and enforce a few rules the build plan
+# calls for explicitly (see CLAUDE.md §8 and Phase 0):
+#   - avoid_print          : no stray print() in shipped code
+#   - prefer_final_locals  : locals that are never reassigned must be `final`
+#
+# `flutter analyze` must stay completely clean. Do not silence a lint by
+# loosening this file without a comment saying why.
+
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  errors:
+    # Treat these as build-breaking, not advisory.
+    avoid_print: error
+    prefer_final_locals: error
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+
+linter:
+  rules:
+    - avoid_print
+    - prefer_final_locals
+    - prefer_final_in_for_each
+    - prefer_const_constructors
+    - prefer_const_declarations
+    - always_declare_return_types
+    - unawaited_futures
+    - require_trailing_commas

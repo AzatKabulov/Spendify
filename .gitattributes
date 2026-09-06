@@ -1,0 +1,20 @@
+# Normalise line endings so the repo is identical on Windows / macOS / Linux.
+* text=auto eol=lf
+
+# Binary assets — never touch.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.jar binary
+*.keystore binary
+*.jks binary
+*.ttf binary
+*.otf binary
+
+# Generated / vendored — collapse in diffs and reviews.
+pubspec.lock linguist-generated=true
+*.g.dart linguist-generated=true
+android/gradlew text eol=lf
+android/gradlew.bat text eol=crlf
