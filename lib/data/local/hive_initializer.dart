@@ -1,5 +1,4 @@
-import 'dart:typed_data';
-
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../../core/constants.dart';
@@ -42,14 +41,24 @@ class HiveStore {
 ///
 /// Call once from `main()` before `runApp`.
 Future<HiveStore> bootstrapHive({EncryptionKeyStore? keyStore}) async {
+  final sw = Stopwatch()..start();
   await Hive.initFlutter();
   registerSpendlyHiveAdapters();
+  final initMs = sw.elapsedMilliseconds;
 
   final store = keyStore ?? SecureStorageEncryptionKeyStore();
   final Uint8List key = await store.getOrCreateKey();
   final cipher = HiveAesCipher(key);
+  final keyMs = sw.elapsedMilliseconds - initMs;
 
-  return openEncryptedBoxes(cipher);
+  final boxes = await openEncryptedBoxes(cipher);
+  if (!kReleaseMode) {
+    debugPrint(
+      'HIVE bootstrap: init=${initMs}ms key=${keyMs}ms '
+      'boxes=${sw.elapsedMilliseconds - initMs - keyMs}ms',
+    );
+  }
+  return boxes;
 }
 
 /// Opens all boxes with [cipher]. Extracted from [bootstrapHive] so tests can

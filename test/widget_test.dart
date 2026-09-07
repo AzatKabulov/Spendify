@@ -1,16 +1,20 @@
-// Phase 1 smoke test: the scaffold still builds and shows the placeholder home.
-// The data layer is exercised by the tests under test/data/ and test/domain/.
+// Phase 2 smoke test: the app boots to the home screen with its add button.
+// Feature behaviour is covered by the tests under test/presentation/,
+// test/core/ and test/domain/.
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/main.dart';
+import 'package:spendly/presentation/screens/home_screen.dart';
+
+import 'support/widget_test_scaffold.dart';
 
 void main() {
-  testWidgets('App boots to the Spendly placeholder screen', (
-    WidgetTester tester,
+  testWidgets('home screen shows the title and a visible Add button', (
+    tester,
   ) async {
-    await tester.pumpWidget(const SpendlyApp());
+    await pumpSpendly(tester, home: const HomeScreen());
 
-    expect(find.text('Spendly'), findsWidgets);
-    expect(find.text('Encrypted storage ready — Phase 1'), findsOneWidget);
+    expect(find.text('Spendly'), findsOneWidget);
+    expect(find.widgetWithText(FloatingActionButton, 'Add'), findsOneWidget);
   });
 }

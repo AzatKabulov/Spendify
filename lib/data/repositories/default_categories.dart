@@ -1,7 +1,10 @@
+import 'package:flutter/material.dart';
+
 /// Seed data for the default category set (CLAUDE.md §6 "Custom categories",
 /// Phase 1 task 7). Seeded once per install with `isDefault = true`.
 ///
-/// `iconCode` values are Material `IconData.codePoint`s; `colorValue` is an
+/// `iconCode` is a Material `IconData.codePoint` drawn from `kCategoryIcons`
+/// (`core/category_icons.dart`) so it stays tree-shake-safe; `colorValue` is an
 /// ARGB int. Both are resolved to Flutter types only in the UI.
 class DefaultCategorySeed {
   const DefaultCategorySeed({
@@ -15,29 +18,45 @@ class DefaultCategorySeed {
   final int colorValue;
 }
 
-const List<DefaultCategorySeed> kDefaultCategories = <DefaultCategorySeed>[
-  DefaultCategorySeed(name: 'Food', iconCode: 0xe57a, colorValue: 0xFFEF6C00),
+final List<DefaultCategorySeed> kDefaultCategories = <DefaultCategorySeed>[
+  DefaultCategorySeed(
+    name: 'Food',
+    iconCode: Icons.restaurant.codePoint,
+    colorValue: 0xFFEF6C00,
+  ),
   DefaultCategorySeed(
     name: 'Transport',
-    iconCode: 0xe1d5,
+    iconCode: Icons.directions_bus.codePoint,
     colorValue: 0xFF1565C0,
   ),
   DefaultCategorySeed(
     name: 'Groceries',
-    iconCode: 0xe8cb,
+    iconCode: Icons.shopping_cart.codePoint,
     colorValue: 0xFF2E7D32,
   ),
-  DefaultCategorySeed(name: 'Bills', iconCode: 0xe19c, colorValue: 0xFF6A1B9A),
+  DefaultCategorySeed(
+    name: 'Bills',
+    iconCode: Icons.receipt_long.codePoint,
+    colorValue: 0xFF6A1B9A,
+  ),
   DefaultCategorySeed(
     name: 'Entertainment',
-    iconCode: 0xe01d,
+    iconCode: Icons.movie.codePoint,
     colorValue: 0xFFAD1457,
   ),
-  DefaultCategorySeed(name: 'Health', iconCode: 0xe1d7, colorValue: 0xFFC62828),
+  DefaultCategorySeed(
+    name: 'Health',
+    iconCode: Icons.medical_services.codePoint,
+    colorValue: 0xFFC62828,
+  ),
   DefaultCategorySeed(
     name: 'Education',
-    iconCode: 0xe80c,
+    iconCode: Icons.school.codePoint,
     colorValue: 0xFF00838F,
   ),
-  DefaultCategorySeed(name: 'Other', iconCode: 0xe148, colorValue: 0xFF546E7A),
+  DefaultCategorySeed(
+    name: 'Other',
+    iconCode: Icons.category.codePoint,
+    colorValue: 0xFF546E7A,
+  ),
 ];

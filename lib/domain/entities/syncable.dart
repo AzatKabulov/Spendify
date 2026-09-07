@@ -30,6 +30,10 @@ abstract interface class Syncable<T extends Syncable<T>> {
   /// Soft delete: `isDeleted = true`, `updatedAt = at`, `syncStatus = pending`.
   T markDeleted({required DateTime at});
 
+  /// Undo a soft delete: `isDeleted = false`, `updatedAt = at`,
+  /// `syncStatus = pending`. Powers the delete/undo flow in the UI.
+  T markRestored({required DateTime at});
+
   /// Called by the Sync Manager (Phase 6) once the record matches remote.
   T markSynced();
 }

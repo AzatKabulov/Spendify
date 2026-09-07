@@ -93,6 +93,10 @@ class Budget implements Syncable<Budget> {
       copyWith(isDeleted: true, updatedAt: at, syncStatus: SyncStatus.pending);
 
   @override
+  Budget markRestored({required DateTime at}) =>
+      copyWith(isDeleted: false, updatedAt: at, syncStatus: SyncStatus.pending);
+
+  @override
   Budget markSynced() => copyWith(syncStatus: SyncStatus.synced);
 
   @override

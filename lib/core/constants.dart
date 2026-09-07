@@ -44,4 +44,8 @@ class MetaKeys {
   const MetaKeys._();
 
   static const String defaultCategoriesSeeded = 'default_categories_seeded';
+
+  /// Id of the category chosen on the most recent transaction save. Used to
+  /// pre-select the category on the add form (CLAUDE.md §6, 60-second target).
+  static const String lastUsedCategoryId = 'last_used_category_id';
 }

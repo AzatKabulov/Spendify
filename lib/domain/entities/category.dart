@@ -91,6 +91,10 @@ class Category implements Syncable<Category> {
       copyWith(isDeleted: true, updatedAt: at, syncStatus: SyncStatus.pending);
 
   @override
+  Category markRestored({required DateTime at}) =>
+      copyWith(isDeleted: false, updatedAt: at, syncStatus: SyncStatus.pending);
+
+  @override
   Category markSynced() => copyWith(syncStatus: SyncStatus.synced);
 
   @override

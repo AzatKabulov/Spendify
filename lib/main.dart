@@ -1,15 +1,20 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/dev/dev_seed.dart';
 import 'data/local/hive_initializer.dart';
 import 'presentation/providers/repository_providers.dart';
+import 'presentation/screens/home_screen.dart';
 
 /// Entry point.
 ///
-/// Phase 1: encrypted local storage is wired up (Hive + AES key from the
-/// Keystore) and the default categories are seeded on first launch. There is
-/// still no feature UI — that starts in Phase 2.
+/// Bootstraps encrypted local storage (Hive + AES key from the Keystore),
+/// seeds the default categories on first launch, then hands off to the UI.
+/// Everything from here runs fully offline.
 Future<void> main() async {
+  final startupStopwatch = Stopwatch()..start();
   WidgetsFlutterBinding.ensureInitialized();
 
   final HiveStore store = await bootstrapHive();
@@ -19,6 +24,20 @@ Future<void> main() async {
   );
   // First-launch seed of the default category set (Phase 1 task 7).
   await container.read(categoryRepositoryProvider).ensureDefaultsSeeded();
+
+  // Debug-only: bulk transactions via --dart-define=DEV_SEED_TRANSACTIONS=<n>.
+  await maybeDevSeedTransactions(store);
+
+  if (!kReleaseMode) {
+    final bootMs = startupStopwatch.elapsedMilliseconds;
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      debugPrint(
+        'STARTUP: bootstrap=${bootMs}ms, '
+        'firstFrame=${startupStopwatch.elapsedMilliseconds}ms, '
+        'transactions=${store.transactions.length}',
+      );
+    });
+  }
 
   runApp(
     UncontrolledProviderScope(container: container, child: const SpendlyApp()),
@@ -37,39 +56,7 @@ class SpendlyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2E7D32)),
         useMaterial3: true,
       ),
-      home: const HomePlaceholderScreen(),
-    );
-  }
-}
-
-/// Temporary landing screen. Replaced by the real home screen in Phase 2.
-class HomePlaceholderScreen extends StatelessWidget {
-  const HomePlaceholderScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final TextTheme textTheme = Theme.of(context).textTheme;
-    return Scaffold(
-      appBar: AppBar(title: const Text('Spendly')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Icon(
-              Icons.savings_outlined,
-              size: 72,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: 16),
-            Text('Spendly', style: textTheme.headlineMedium),
-            const SizedBox(height: 8),
-            Text(
-              'Encrypted storage ready — Phase 1',
-              style: textTheme.bodyMedium,
-            ),
-          ],
-        ),
-      ),
+      home: const HomeScreen(),
     );
   }
 }

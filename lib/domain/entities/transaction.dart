@@ -108,6 +108,10 @@ class Transaction implements Syncable<Transaction> {
       copyWith(isDeleted: true, updatedAt: at, syncStatus: SyncStatus.pending);
 
   @override
+  Transaction markRestored({required DateTime at}) =>
+      copyWith(isDeleted: false, updatedAt: at, syncStatus: SyncStatus.pending);
+
+  @override
   Transaction markSynced() => copyWith(syncStatus: SyncStatus.synced);
 
   @override

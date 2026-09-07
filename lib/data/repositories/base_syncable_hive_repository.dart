@@ -81,6 +81,15 @@ abstract class BaseSyncableHiveRepository<E extends Syncable<E>, M>
   }
 
   @override
+  Future<void> restore(String id) async {
+    final model = box.get(id);
+    if (model == null) return;
+    final entity = toDomain(model);
+    if (!entity.isDeleted) return;
+    await _put(entity.markRestored(at: nowUtc()));
+  }
+
+  @override
   Future<List<E>> getPendingSync() async => _allDomain()
       .where((e) => e.syncStatus == SyncStatus.pending)
       .toList(growable: false);

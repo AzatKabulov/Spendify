@@ -30,6 +30,10 @@ abstract interface class SyncableRepository<E extends Syncable<E>> {
   /// Soft-delete. No-op if the id is unknown.
   Future<void> delete(String id);
 
+  /// Undo a soft-delete (the UI's UNDO action). No-op if the id is unknown or
+  /// the record is not currently deleted.
+  Future<void> restore(String id);
+
   // --- Sync Manager surface (Phase 6) -------------------------------------
 
   /// Records with `syncStatus == pending`, tombstones included.

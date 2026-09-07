@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/clock.dart';
 import '../../core/id_generator.dart';
+import '../../data/local/app_preferences.dart';
 import '../../data/local/hive_initializer.dart';
 import '../../data/repositories/hive_advice_record_repository.dart';
 import '../../data/repositories/hive_budget_repository.dart';
@@ -31,6 +32,11 @@ final clockProvider = Provider<Clock>((ref) => systemClock);
 
 /// Id factory for new records. Override in tests for deterministic ids.
 final idGeneratorProvider = Provider<IdGenerator>((ref) => generateUuidV4);
+
+/// Small local UI preferences (last-used category, …), backed by the meta box.
+final appPreferencesProvider = Provider<AppPreferences>((ref) {
+  return HiveAppPreferences(ref.watch(hiveStoreProvider).meta);
+});
 
 final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
   return HiveTransactionRepository(
