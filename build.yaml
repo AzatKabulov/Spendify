@@ -1,0 +1,8 @@
+# Keep Hive codegen pointed only at the DTOs. Everything else (entities, tests)
+# is hand-written and must not be scanned by the generator.
+targets:
+  $default:
+    builders:
+      hive_generator:
+        generate_for:
+          - lib/data/local/models/*_model.dart

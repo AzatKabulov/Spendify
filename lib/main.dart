@@ -1,13 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'data/local/hive_initializer.dart';
+import 'presentation/providers/repository_providers.dart';
+
 /// Entry point.
 ///
-/// Phase 0: an empty but correctly-shaped app. No features, no storage, no
-/// network. The whole tree is wrapped in a [ProviderScope] now so that every
-/// later phase can add Riverpod providers without touching bootstrap code.
-void main() {
-  runApp(const ProviderScope(child: SpendlyApp()));
+/// Phase 1: encrypted local storage is wired up (Hive + AES key from the
+/// Keystore) and the default categories are seeded on first launch. There is
+/// still no feature UI — that starts in Phase 2.
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final HiveStore store = await bootstrapHive();
+
+  final container = ProviderContainer(
+    overrides: [hiveStoreProvider.overrideWithValue(store)],
+  );
+  // First-launch seed of the default category set (Phase 1 task 7).
+  await container.read(categoryRepositoryProvider).ensureDefaultsSeeded();
+
+  runApp(
+    UncontrolledProviderScope(container: container, child: const SpendlyApp()),
+  );
 }
 
 class SpendlyApp extends StatelessWidget {
@@ -49,7 +64,7 @@ class HomePlaceholderScreen extends StatelessWidget {
             Text('Spendly', style: textTheme.headlineMedium),
             const SizedBox(height: 8),
             Text(
-              'Project scaffold — Phase 0',
+              'Encrypted storage ready — Phase 1',
               style: textTheme.bodyMedium,
             ),
           ],
