@@ -7,7 +7,7 @@ import 'base_syncable_hive_repository.dart';
 class HiveBudgetRepository
     extends BaseSyncableHiveRepository<Budget, BudgetModel>
     implements BudgetRepository {
-  HiveBudgetRepository(super.box, {super.clock});
+  HiveBudgetRepository(super.box, {required super.userId, super.clock});
 
   @override
   BudgetModel toModel(Budget entity) => entity.toModel();

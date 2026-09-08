@@ -80,7 +80,11 @@ void main() {
     // Category breakdown lives below the fold — scroll it into view. Largest
     // first, with names + amounts.
     final listView = find.byType(Scrollable).first;
-    await tester.scrollUntilVisible(find.text('Food'), 200, scrollable: listView);
+    await tester.scrollUntilVisible(
+      find.text('Food'),
+      200,
+      scrollable: listView,
+    );
     expect(find.text('By category'), findsOneWidget);
     expect(find.text('Food'), findsOneWidget);
     expect(find.text('Transport'), findsOneWidget);

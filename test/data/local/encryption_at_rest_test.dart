@@ -17,7 +17,10 @@ void main() {
       final harness = await HiveTestHarness.start();
       addTearDown(harness.dispose);
 
-      final repo = HiveTransactionRepository(harness.store.transactions);
+      final repo = HiveTransactionRepository(
+        harness.store.transactions,
+        userId: kLocalUserId,
+      );
       await repo.add(
         Transaction.create(
           id: 'enc-1',

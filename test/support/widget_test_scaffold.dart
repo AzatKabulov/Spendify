@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:spendly/core/constants.dart';
 import 'package:spendly/data/repositories/aggregation_maintenance.dart';
 import 'package:spendly/domain/entities/transaction.dart';
+import 'package:spendly/presentation/providers/auth_providers.dart';
 import 'package:spendly/presentation/providers/repository_providers.dart';
 
 import 'fake_repositories.dart';
@@ -55,6 +57,7 @@ Future<TestRepos> pumpSpendly(
   final localNow = now ?? DateTime(2026, 9, 15, 10);
   final maintenance = AggregationMaintenance(
     aggRepo,
+    userId: kLocalUserId,
     clock: () => DateTime.utc(2026, 9, 8, 12),
   );
 
@@ -70,6 +73,9 @@ Future<TestRepos> pumpSpendly(
         clockProvider.overrideWithValue(() => DateTime.utc(2026, 9, 8, 12)),
         localTimeProvider.overrideWithValue(() => localNow),
         idGeneratorProvider.overrideWithValue(() => 'id-${idSeq++}'),
+        // Signed-in as the placeholder user so uid-scoped providers resolve and
+        // match the fake repos' seed data (Phase 5).
+        currentUserIdProvider.overrideWithValue(kLocalUserId),
       ],
       child: MaterialApp(home: home),
     ),

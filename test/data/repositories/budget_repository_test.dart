@@ -31,7 +31,11 @@ void main() {
   setUp(() async {
     harness = await HiveTestHarness.start();
     fakeNow = DateTime.utc(2026, 9, 6, 12);
-    repo = HiveBudgetRepository(harness.store.budgets, clock: () => fakeNow);
+    repo = HiveBudgetRepository(
+      harness.store.budgets,
+      userId: kLocalUserId,
+      clock: () => fakeNow,
+    );
   });
 
   tearDown(() => harness.dispose());

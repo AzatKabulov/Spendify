@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/clock.dart';
-import '../../core/constants.dart';
 import '../../core/id_generator.dart';
 import '../../data/local/app_preferences.dart';
 import '../../data/repositories/aggregation_maintenance.dart';
@@ -11,6 +10,7 @@ import '../../domain/entities/period_aggregate.dart';
 import '../../domain/entities/transaction.dart';
 import '../../domain/repositories/transaction_repository.dart';
 import '../../domain/services/transaction_ordering.dart';
+import 'auth_providers.dart';
 import 'repository_providers.dart';
 
 /// Live, display-ordered transaction list (newest date first; newest created
@@ -20,10 +20,16 @@ final transactionsProvider = StreamProvider<List<Transaction>>((ref) {
   return repo.watchAll().map(sortTransactionsForDisplay);
 });
 
-/// Live cached report aggregates. The Phase 2/3 seams below read from here now
-/// instead of scanning transactions.
+/// Live cached report aggregates for the signed-in user. The Phase 2/3 seams
+/// below read from here instead of scanning transactions. Scoped to the current
+/// uid (aggregate ids embed the uid; the box is dropped + rebuilt on migration,
+/// but filter anyway so the boundary is explicit — Phase 5 Part E).
 final periodAggregatesProvider = StreamProvider<List<PeriodAggregate>>((ref) {
-  return ref.watch(periodAggregateRepositoryProvider).watchAll();
+  final uid = ref.watch(currentUserIdProvider);
+  return ref
+      .watch(periodAggregateRepositoryProvider)
+      .watchAll()
+      .map((all) => all.where((a) => a.userId == uid).toList(growable: false));
 });
 
 /// Sum of the yearly period-total aggregates: all-time income − expense.
@@ -64,6 +70,7 @@ final transactionActionsProvider = Provider<TransactionActions>((ref) {
     repository: ref.watch(transactionRepositoryProvider),
     preferences: ref.watch(appPreferencesProvider),
     maintenance: ref.watch(aggregationMaintenanceProvider),
+    userId: requireCurrentUserId(ref),
     clock: ref.watch(clockProvider),
     newId: ref.watch(idGeneratorProvider),
   );
@@ -74,6 +81,7 @@ class TransactionActions {
     required TransactionRepository repository,
     required AppPreferences preferences,
     required AggregationMaintenance maintenance,
+    required this.userId,
     required this.clock,
     required this.newId,
   }) : _repo = repository,
@@ -83,6 +91,9 @@ class TransactionActions {
   final TransactionRepository _repo;
   final AppPreferences _prefs;
   final AggregationMaintenance _aggregates;
+
+  /// The signed-in user new rows are stamped with (Phase 5).
+  final String userId;
   final Clock clock;
   final IdGenerator newId;
 
@@ -96,7 +107,7 @@ class TransactionActions {
   }) async {
     final txn = Transaction.create(
       id: newId(),
-      userId: kLocalUserId,
+      userId: userId,
       amountMinor: amountMinor,
       type: type,
       categoryId: categoryId,

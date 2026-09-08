@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/clock.dart';
-import '../../core/constants.dart';
 import '../../core/id_generator.dart';
 import '../../domain/entities/budget.dart';
 import '../../domain/entities/enums.dart';
@@ -10,6 +9,7 @@ import '../../domain/entities/period_aggregate.dart';
 import '../../domain/repositories/budget_repository.dart';
 import '../../domain/services/aggregation_service.dart';
 import '../../domain/services/budget_evaluator.dart';
+import 'auth_providers.dart';
 import 'repository_providers.dart';
 import 'transaction_providers.dart';
 
@@ -27,12 +27,12 @@ final budgetsProvider = StreamProvider<List<Budget>>((ref) {
 });
 
 /// The current-period expense aggregate id for a budget.
-String _budgetAggregateId(Budget budget, DateTime now) {
+String _budgetAggregateId(String userId, Budget budget, DateTime now) {
   final periodType = budget.period == BudgetPeriod.weekly
       ? PeriodType.weekly
       : PeriodType.monthly;
   return PeriodAggregate.buildId(
-    userId: kLocalUserId,
+    userId: userId,
     periodType: periodType,
     periodKey: periodKeyFor(now, periodType),
     categoryId: budget.categoryId,
@@ -46,6 +46,7 @@ String _budgetAggregateId(Budget budget, DateTime now) {
 /// scan. The Monday-start ISO week / calendar-month boundaries are identical to
 /// Phase 3's `BudgetEvaluator`, so the numbers match. Widgets are unchanged.
 final budgetStatusesProvider = Provider<List<BudgetStatus>>((ref) {
+  final uid = requireCurrentUserId(ref);
   final budgets = ref.watch(budgetsProvider).value ?? const [];
   final aggregates = ref.watch(periodAggregatesProvider).value ?? const [];
   final now = ref.watch(localTimeProvider)();
@@ -54,7 +55,8 @@ final budgetStatusesProvider = Provider<List<BudgetStatus>>((ref) {
     for (final b in budgets)
       budgetStatusFromSpent(
         budget: b,
-        spentMinor: byId[_budgetAggregateId(b, now)]?.totalExpenseMinor ?? 0,
+        spentMinor:
+            byId[_budgetAggregateId(uid, b, now)]?.totalExpenseMinor ?? 0,
         now: now,
       ),
   ];
@@ -93,6 +95,7 @@ final budgetStatusByIdProvider = Provider.family<BudgetStatus?, String>((
 final budgetActionsProvider = Provider<BudgetActions>((ref) {
   return BudgetActions(
     repository: ref.watch(budgetRepositoryProvider),
+    userId: requireCurrentUserId(ref),
     clock: ref.watch(clockProvider),
     newId: ref.watch(idGeneratorProvider),
   );
@@ -101,11 +104,15 @@ final budgetActionsProvider = Provider<BudgetActions>((ref) {
 class BudgetActions {
   BudgetActions({
     required BudgetRepository repository,
+    required this.userId,
     required this.clock,
     required this.newId,
   }) : _repo = repository;
 
   final BudgetRepository _repo;
+
+  /// The signed-in user new budgets are stamped with (Phase 5).
+  final String userId;
   final Clock clock;
   final IdGenerator newId;
 
@@ -118,7 +125,7 @@ class BudgetActions {
     return _repo.add(
       Budget.create(
         id: newId(),
-        userId: kLocalUserId,
+        userId: userId,
         categoryId: categoryId,
         limitAmountMinor: limitAmountMinor,
         period: period,

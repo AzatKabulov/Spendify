@@ -3,41 +3,51 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'core/constants.dart';
-import 'core/dev/dev_seed.dart';
+import 'data/local/auth_session_store.dart';
 import 'data/local/hive_initializer.dart';
+import 'data/remote/firebase_bootstrap.dart';
+import 'presentation/providers/auth_providers.dart';
 import 'presentation/providers/repository_providers.dart';
-import 'presentation/screens/home_screen.dart';
+import 'presentation/screens/auth/auth_gate.dart';
 
 /// Entry point.
 ///
-/// Bootstraps encrypted local storage (Hive + AES key from the Keystore),
-/// seeds the default categories on first launch, then hands off to the UI.
-/// Everything from here runs fully offline.
+/// Order matters for the offline-first guarantee (CLAUDE.md §3/§6):
+///   1. open encrypted local storage (Hive + Keystore key);
+///   2. initialise Firebase — *never fatal*: a failure still reaches the
+///      sign-in screen with a message, not a white screen;
+///   3. read the persisted session from secure storage — **local only**, no
+///      Firebase call — so a logged-in user opening the app offline goes
+///      straight in;
+///   4. if there is a session, finish that user's data prep (resume an
+///      interrupted userId migration, seed defaults, rebuild the aggregate
+///      cache) before the first frame.
 Future<void> main() async {
   final startupStopwatch = Stopwatch()..start();
   WidgetsFlutterBinding.ensureInitialized();
 
   final HiveStore store = await bootstrapHive();
+  final FirebaseBootstrapResult firebase = await initializeFirebase();
+  final AuthSession? session = await SecureStorageAuthSessionStore().read();
 
   final container = ProviderContainer(
-    overrides: [hiveStoreProvider.overrideWithValue(store)],
+    overrides: [
+      hiveStoreProvider.overrideWithValue(store),
+      firebaseAvailabilityProvider.overrideWithValue(firebase.availability),
+      startupSessionProvider.overrideWithValue(session),
+    ],
   );
-  // First-launch seed of the default category set (Phase 1 task 7).
-  await container.read(categoryRepositoryProvider).ensureDefaultsSeeded();
 
-  // Debug-only: bulk transactions via --dart-define=DEV_SEED_TRANSACTIONS=<n>.
-  final devSeeded = await maybeDevSeedTransactions(store);
-
-  // Phase 4: build the PeriodAggregate cache for pre-existing Phase 2/3 data
-  // (and for any dev-seeded rows, which bypass TransactionActions). Runs once,
-  // guarded by a meta flag; the Settings "rebuild" action re-runs it on demand.
-  final aggregatesBuilt =
-      store.meta.get(MetaKeys.aggregatesBuilt, defaultValue: false) as bool;
-  if (!aggregatesBuilt || devSeeded) {
-    final txns = await container.read(transactionRepositoryProvider).getAll();
-    await container.read(aggregationMaintenanceProvider).rebuildAll(txns);
-    await store.meta.put(MetaKeys.aggregatesBuilt, true);
+  if (session != null) {
+    try {
+      await container.read(userDataPreparerProvider).prepareFor(session.uid);
+    } catch (error, stack) {
+      // A failed prep must not white-screen the app. The user still reaches
+      // home; Settings → "Rebuild report data" is the recovery path.
+      if (!kReleaseMode) {
+        debugPrint('STARTUP: user data prep failed: $error\n$stack');
+      }
+    }
   }
 
   if (!kReleaseMode) {
@@ -46,6 +56,8 @@ Future<void> main() async {
       debugPrint(
         'STARTUP: bootstrap=${bootMs}ms, '
         'firstFrame=${startupStopwatch.elapsedMilliseconds}ms, '
+        'firebase=${firebase.availability.name}, '
+        'session=${session == null ? "none" : "present"}, '
         'transactions=${store.transactions.length}',
       );
     });
@@ -68,7 +80,7 @@ class SpendlyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2E7D32)),
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      home: const AuthGate(),
     );
   }
 }

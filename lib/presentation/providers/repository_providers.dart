@@ -17,6 +17,7 @@ import '../../domain/repositories/category_repository.dart';
 import '../../domain/repositories/gamification_state_repository.dart';
 import '../../domain/repositories/period_aggregate_repository.dart';
 import '../../domain/repositories/transaction_repository.dart';
+import 'auth_providers.dart';
 
 /// The opened, encrypted Hive boxes. **Must be overridden in `main()`** with the
 /// value from `bootstrapHive()` — the app cannot run without real storage, so
@@ -48,6 +49,7 @@ final appPreferencesProvider = Provider<AppPreferences>((ref) {
 final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
   return HiveTransactionRepository(
     ref.watch(hiveStoreProvider).transactions,
+    userId: requireCurrentUserId(ref),
     clock: ref.watch(clockProvider),
   );
 });
@@ -57,6 +59,7 @@ final categoryRepositoryProvider = Provider<CategoryRepository>((ref) {
   return HiveCategoryRepository(
     store.categories,
     metaBox: store.meta,
+    userId: requireCurrentUserId(ref),
     clock: ref.watch(clockProvider),
     idGenerator: ref.watch(idGeneratorProvider),
   );
@@ -65,6 +68,7 @@ final categoryRepositoryProvider = Provider<CategoryRepository>((ref) {
 final budgetRepositoryProvider = Provider<BudgetRepository>((ref) {
   return HiveBudgetRepository(
     ref.watch(hiveStoreProvider).budgets,
+    userId: requireCurrentUserId(ref),
     clock: ref.watch(clockProvider),
   );
 });
@@ -93,6 +97,7 @@ final periodAggregateRepositoryProvider = Provider<PeriodAggregateRepository>((
 final aggregationMaintenanceProvider = Provider<AggregationMaintenance>((ref) {
   return AggregationMaintenance(
     ref.watch(periodAggregateRepositoryProvider),
+    userId: requireCurrentUserId(ref),
     clock: ref.watch(clockProvider),
   );
 });

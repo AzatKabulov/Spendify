@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 
 import '../../core/clock.dart';
-import '../../core/constants.dart';
 import '../../domain/entities/enums.dart';
 import '../../domain/entities/period_aggregate.dart';
 import '../../domain/entities/transaction.dart';
@@ -19,8 +18,8 @@ import '../../domain/services/aggregation_service.dart';
 class AggregationMaintenance {
   AggregationMaintenance(
     this._aggregates, {
+    required this.userId,
     this.clock = systemClock,
-    this.userId = kLocalUserId,
   });
 
   final PeriodAggregateRepository _aggregates;

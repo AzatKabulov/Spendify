@@ -34,11 +34,13 @@ migrate_working_dir/
 /coverage/
 
 # === Spendly secrets — never commit (CLAUDE.md §8) ===
-# Firebase config (added in Phase 5)
+# Firebase config (added in Phase 5) — kept local; regenerate with
+# `flutterfire configure` (see FIREBASE_SETUP.md)
 **/google-services.json
 **/GoogleService-Info.plist
 firebase_options.dart
 .firebaserc
+firebase.json
 # Environment / API keys (Gemini key added in Phase 7)
 .env
 .env.*

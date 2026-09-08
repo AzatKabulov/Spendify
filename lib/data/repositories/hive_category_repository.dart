@@ -15,15 +15,14 @@ class HiveCategoryRepository
   HiveCategoryRepository(
     super.box, {
     required Box<dynamic> metaBox,
+    required super.userId,
     super.clock,
     IdGenerator idGenerator = generateUuidV4,
-    this.userId = kLocalUserId,
   }) : _meta = metaBox,
        _newId = idGenerator;
 
   final Box<dynamic> _meta;
   final IdGenerator _newId;
-  final String userId;
 
   @override
   CategoryModel toModel(Category entity) => entity.toModel();

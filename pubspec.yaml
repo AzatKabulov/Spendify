@@ -35,6 +35,12 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   flutter_riverpod: ^3.4.3
+  # Firebase — Authentication only in Phase 5. Firestore/Storage arrive in
+  # Phases 6/7. `firebase_auth` is imported by exactly one file
+  # (data/remote/firebase_auth_repository.dart) so the provider stays
+  # replaceable (CLAUDE.md §6 maintainability).
+  firebase_core: ^4.14.0
+  firebase_auth: ^6.6.1
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   # Pinned to 10.3.x: 11.0.0 forces compileSdk 37, which has no plain

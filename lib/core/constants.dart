@@ -13,6 +13,11 @@ const String kLocalUserId = 'local-user';
 /// orphans every existing encrypted box, so treat it as permanent.
 const String kHiveEncryptionKeyName = 'spendly.hive.aeskey.v1';
 
+/// `flutter_secure_storage` keys for the persisted auth session (Phase 5). The
+/// UID is what startup routing reads; neither key ever holds a password.
+const String kAuthUidKeyName = 'spendly.auth.uid.v1';
+const String kAuthEmailKeyName = 'spendly.auth.email.v1';
+
 /// Names of the encrypted Hive boxes. One box per aggregate.
 class HiveBoxes {
   const HiveBoxes._();
@@ -53,4 +58,10 @@ class MetaKeys {
   /// Phase 2/3 data. Bump the suffix to force a one-off rebuild after a change
   /// to the aggregation logic.
   static const String aggregatesBuilt = 'aggregates_built_v1';
+
+  /// Holds the real Firebase UID that the Phase 1 placeholder `userId` was
+  /// migrated to (Phase 5, CLAUDE.md §4.1). Absent = migration not yet
+  /// completed; the migration re-runs on every launch until it finishes a full
+  /// pass with zero placeholder records remaining.
+  static const String userIdMigratedTo = 'user_id_migrated_to';
 }

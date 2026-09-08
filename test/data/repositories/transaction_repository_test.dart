@@ -30,6 +30,7 @@ void main() {
     fakeNow = DateTime.utc(2026, 9, 6, 12);
     repo = HiveTransactionRepository(
       harness.store.transactions,
+      userId: kLocalUserId,
       clock: () => fakeNow,
     );
   });

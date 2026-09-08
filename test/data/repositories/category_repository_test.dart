@@ -31,6 +31,7 @@ void main() {
     repo = HiveCategoryRepository(
       harness.store.categories,
       metaBox: harness.store.meta,
+      userId: kLocalUserId,
       clock: () => fakeNow,
       idGenerator: () => 'seed-${idSeq++}',
     );

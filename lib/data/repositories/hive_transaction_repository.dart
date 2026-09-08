@@ -7,7 +7,7 @@ import 'base_syncable_hive_repository.dart';
 class HiveTransactionRepository
     extends BaseSyncableHiveRepository<Transaction, TransactionModel>
     implements TransactionRepository {
-  HiveTransactionRepository(super.box, {super.clock});
+  HiveTransactionRepository(super.box, {required super.userId, super.clock});
 
   @override
   TransactionModel toModel(Transaction entity) => entity.toModel();

@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/clock.dart';
-import '../../core/constants.dart';
 import '../../core/id_generator.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/repositories/category_repository.dart';
+import 'auth_providers.dart';
 import 'repository_providers.dart';
 import 'transaction_providers.dart';
 
@@ -74,6 +74,7 @@ final categoryTransactionCountProvider = Provider.family<int, String>((
 final categoryActionsProvider = Provider<CategoryActions>((ref) {
   return CategoryActions(
     repository: ref.watch(categoryRepositoryProvider),
+    userId: requireCurrentUserId(ref),
     clock: ref.watch(clockProvider),
     newId: ref.watch(idGeneratorProvider),
   );
@@ -82,11 +83,15 @@ final categoryActionsProvider = Provider<CategoryActions>((ref) {
 class CategoryActions {
   CategoryActions({
     required CategoryRepository repository,
+    required this.userId,
     required this.clock,
     required this.newId,
   }) : _repo = repository;
 
   final CategoryRepository _repo;
+
+  /// The signed-in user new categories are stamped with (Phase 5).
+  final String userId;
   final Clock clock;
   final IdGenerator newId;
 
@@ -97,7 +102,7 @@ class CategoryActions {
   }) {
     final category = Category.create(
       id: newId(),
-      userId: kLocalUserId,
+      userId: userId,
       name: name.trim(),
       iconCode: iconCode,
       colorValue: colorValue,

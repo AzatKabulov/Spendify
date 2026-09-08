@@ -7,6 +7,7 @@ import 'package:spendly/domain/entities/enums.dart';
 import 'package:spendly/domain/entities/period_aggregate.dart';
 import 'package:spendly/domain/entities/syncable.dart';
 import 'package:spendly/domain/entities/transaction.dart';
+import 'package:spendly/domain/repositories/auth_repository.dart';
 import 'package:spendly/domain/repositories/budget_repository.dart';
 import 'package:spendly/domain/repositories/category_repository.dart';
 import 'package:spendly/domain/repositories/period_aggregate_repository.dart';
@@ -250,5 +251,65 @@ class FakeAppPreferences implements AppPreferences {
   @override
   Future<void> setLastUsedCategoryId(String categoryId) async {
     _lastUsed = categoryId;
+  }
+}
+
+/// Scriptable [AuthRepository] for auth-screen widget tests — no Firebase.
+class FakeAuthRepository implements AuthRepository {
+  /// UID returned by a successful sign-in / sign-up.
+  String nextUid = 'fake-uid-1';
+
+  /// If set, every call throws this instead of succeeding.
+  AuthException? failWith;
+
+  /// If set, calls await this before completing — lets a test hold the request
+  /// "in flight" to assert the submit button is disabled.
+  Completer<void>? gate;
+
+  int signInCalls = 0;
+  int signUpCalls = 0;
+  int signOutCalls = 0;
+  int resetCalls = 0;
+
+  @override
+  String? currentUserId;
+
+  @override
+  String? currentUserEmail;
+
+  Future<String> _authenticate(String email) async {
+    if (gate != null) await gate!.future;
+    final failure = failWith;
+    if (failure != null) throw failure;
+    currentUserId = nextUid;
+    currentUserEmail = email.trim();
+    return nextUid;
+  }
+
+  @override
+  Future<String> signIn({required String email, required String password}) {
+    signInCalls++;
+    return _authenticate(email);
+  }
+
+  @override
+  Future<String> signUp({required String email, required String password}) {
+    signUpCalls++;
+    return _authenticate(email);
+  }
+
+  @override
+  Future<void> sendPasswordReset({required String email}) async {
+    resetCalls++;
+    if (gate != null) await gate!.future;
+    final failure = failWith;
+    if (failure != null) throw failure;
+  }
+
+  @override
+  Future<void> signOut() async {
+    signOutCalls++;
+    currentUserId = null;
+    currentUserEmail = null;
   }
 }

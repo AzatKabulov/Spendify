@@ -15,13 +15,27 @@ import '../../domain/repositories/syncable_repository.dart';
 ///   - [delete] never removes a row — `entity.markDeleted` sets `isDeleted`;
 ///   - [getAll] / [getById] / [watchAll] filter out `isDeleted`.
 ///
+/// Every read is also scoped to [userId] (Phase 5, Part E): records owned by a
+/// different user are invisible, so the local layer already agrees with the
+/// Phase 6 Firestore rule "a user touches only documents under their own UID".
+/// A shared box on one device only ever holds one user's data in practice, but
+/// the filter makes the boundary explicit and correct.
+///
 /// The box is keyed by `entity.id`.
 abstract class BaseSyncableHiveRepository<E extends Syncable<E>, M>
     implements SyncableRepository<E> {
-  BaseSyncableHiveRepository(this.box, {this.clock = systemClock});
+  BaseSyncableHiveRepository(
+    this.box, {
+    required this.userId,
+    this.clock = systemClock,
+  });
 
   final Box<M> box;
   final Clock clock;
+
+  /// The owner every read is scoped to. The real Firebase UID once signed in
+  /// (Phase 5); [kLocalUserId] only in pre-auth tests.
+  final String userId;
 
   M toModel(E entity);
   E toDomain(M model);
@@ -30,7 +44,9 @@ abstract class BaseSyncableHiveRepository<E extends Syncable<E>, M>
   /// stamping they do.
   DateTime nowUtc() => clock();
 
-  Iterable<E> _allDomain() => box.values.map(toDomain);
+  /// Every domain record in the box **owned by [userId]**.
+  Iterable<E> _allDomain() =>
+      box.values.map(toDomain).where((e) => e.userId == userId);
 
   @override
   Future<List<E>> getAll() async =>
@@ -41,7 +57,8 @@ abstract class BaseSyncableHiveRepository<E extends Syncable<E>, M>
     final model = box.get(id);
     if (model == null) return null;
     final entity = toDomain(model);
-    return entity.isDeleted ? null : entity;
+    if (entity.userId != userId || entity.isDeleted) return null;
+    return entity;
   }
 
   @override
@@ -104,7 +121,9 @@ abstract class BaseSyncableHiveRepository<E extends Syncable<E>, M>
   @override
   Future<E?> getByIdIncludingDeleted(String id) async {
     final model = box.get(id);
-    return model == null ? null : toDomain(model);
+    if (model == null) return null;
+    final entity = toDomain(model);
+    return entity.userId == userId ? entity : null;
   }
 
   @override
