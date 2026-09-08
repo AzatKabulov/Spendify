@@ -8,18 +8,26 @@ import '../../domain/entities/category.dart';
 import '../../domain/entities/enums.dart';
 import '../../domain/entities/transaction.dart';
 import '../providers/category_providers.dart';
+import '../providers/receipt_scan_providers.dart';
 import '../providers/repository_providers.dart';
 import '../providers/transaction_providers.dart';
 import '../widgets/category_avatar.dart';
 
 /// Add (when [existing] is null) or edit a transaction. One widget for both,
 /// so the two flows never drift apart.
+///
+/// When [prefill] is set the form is seeded from a receipt scan (Phase 7):
+/// AI-filled fields are marked, low confidence is flagged, and a save records
+/// `source = scanned`. Nothing is ever saved without an explicit tap
+/// (CLAUDE.md §7).
 class TransactionFormScreen extends ConsumerStatefulWidget {
-  const TransactionFormScreen({this.existing, super.key});
+  const TransactionFormScreen({this.existing, this.prefill, super.key});
 
   final Transaction? existing;
+  final ReceiptDraft? prefill;
 
   bool get isEditing => existing != null;
+  bool get isFromScan => prefill != null;
 
   @override
   ConsumerState<TransactionFormScreen> createState() =>
@@ -40,15 +48,26 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
   void initState() {
     super.initState();
     final existing = widget.existing;
-    _amountController = TextEditingController(
-      text: existing == null ? '' : minorToEditString(existing.amountMinor),
-    );
-    _noteController = TextEditingController(text: existing?.note ?? '');
-    _type = existing?.type ?? TransactionType.expense;
+    final prefill = widget.prefill;
     final now = ref.read(clockProvider)().toLocal();
-    _date = existing?.date ?? DateTime(now.year, now.month, now.day);
-    _categoryId = existing?.categoryId;
+
+    final seededAmount = existing?.amountMinor ?? prefill?.amountMinor;
+    _amountController = TextEditingController(
+      text: seededAmount == null ? '' : minorToEditString(seededAmount),
+    );
+    _noteController = TextEditingController(
+      text: existing?.note ?? prefill?.note ?? '',
+    );
+    _type = existing?.type ?? TransactionType.expense;
+    _date =
+        existing?.date ??
+        prefill?.date ??
+        DateTime(now.year, now.month, now.day);
+    _categoryId = existing?.categoryId ?? prefill?.categoryId;
   }
+
+  bool _aiFilled(ReceiptField field) =>
+      widget.prefill?.aiFilled.contains(field) ?? false;
 
   @override
   void dispose() {
@@ -106,6 +125,9 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
           categoryId: categoryId,
           date: _date,
           note: note,
+          source: widget.isFromScan
+              ? TransactionSource.scanned
+              : TransactionSource.manual,
         );
       }
       if (mounted) Navigator.of(context).pop();
@@ -114,13 +136,17 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     }
   }
 
+  String get _title {
+    if (widget.isEditing) return 'Edit transaction';
+    if (widget.isFromScan) return 'Check the details';
+    return 'Add transaction';
+  }
+
   @override
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoriesProvider);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.isEditing ? 'Edit transaction' : 'Add transaction'),
-      ),
+      appBar: AppBar(title: Text(_title)),
       body: SafeArea(
         child: categoriesAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -148,22 +174,31 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
       if (deleted != null) categories.add(deleted);
     }
 
+    final prefill = widget.prefill;
+
     return Form(
       key: _formKey,
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: <Widget>[
+          if (prefill != null) ...<Widget>[
+            _ScanBanner(lowConfidence: prefill.isLowConfidence),
+            const SizedBox(height: 16),
+          ],
           TextFormField(
             controller: _amountController,
-            autofocus: !widget.isEditing,
+            autofocus: !widget.isEditing && !widget.isFromScan,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: <TextInputFormatter>[
               FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
             ],
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Amount',
               prefixText: 'RM ',
-              border: OutlineInputBorder(),
+              border: const OutlineInputBorder(),
+              suffixIcon: _aiFilled(ReceiptField.amount)
+                  ? const _FromReceiptMark()
+                  : null,
             ),
             validator: _validateAmount,
             autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -189,9 +224,16 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             initialValue: _categoryId,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Category',
-              border: OutlineInputBorder(),
+              border: const OutlineInputBorder(),
+              suffixIcon: _aiFilled(ReceiptField.category)
+                  ? const _FromReceiptMark()
+                  : null,
+              helperText: prefill?.suggestedCategoryUnmatched != null
+                  ? 'Receipt said "${prefill!.suggestedCategoryUnmatched}" — '
+                        'pick the closest'
+                  : null,
             ),
             items: <DropdownMenuItem<String>>[
               for (final c in categories)
@@ -210,17 +252,27 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
             validator: (v) => v == null ? 'Pick a category' : null,
           ),
           const SizedBox(height: 16),
-          OutlinedButton.icon(
-            onPressed: _pickDate,
-            icon: const Icon(Icons.calendar_today),
-            label: Text(DateFormat('EEE, d MMM yyyy').format(_date)),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _pickDate,
+                  icon: const Icon(Icons.calendar_today),
+                  label: Text(DateFormat('EEE, d MMM yyyy').format(_date)),
+                ),
+              ),
+              if (_aiFilled(ReceiptField.date)) const _FromReceiptMark(),
+            ],
           ),
           const SizedBox(height: 16),
           TextFormField(
             controller: _noteController,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Note (optional)',
-              border: OutlineInputBorder(),
+              border: const OutlineInputBorder(),
+              suffixIcon: _aiFilled(ReceiptField.note)
+                  ? const _FromReceiptMark()
+                  : null,
             ),
             maxLines: 2,
             textCapitalization: TextCapitalization.sentences,
@@ -231,11 +283,78 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Text(
-                widget.isEditing ? 'Save changes' : 'Add transaction',
+                widget.isEditing
+                    ? 'Save changes'
+                    : (widget.isFromScan
+                          ? 'Save transaction'
+                          : 'Add transaction'),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Header on the scan-confirmation form. Always tells the user these are
+/// AI-extracted values to check; louder when confidence is low.
+class _ScanBanner extends StatelessWidget {
+  const _ScanBanner({required this.lowConfidence});
+
+  final bool lowConfidence;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final bg = lowConfidence
+        ? scheme.errorContainer
+        : scheme.surfaceContainerHighest;
+    final fg = lowConfidence
+        ? scheme.onErrorContainer
+        : scheme.onSurfaceVariant;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: <Widget>[
+          Icon(
+            lowConfidence ? Icons.warning_amber_rounded : Icons.auto_awesome,
+            size: 20,
+            color: fg,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              lowConfidence
+                  ? 'The scan was unclear — please check every field before '
+                        'saving.'
+                  : 'Filled in from your receipt. Check it, then save.',
+              style: TextStyle(color: fg),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The little "from receipt" marker on an AI-populated field.
+class _FromReceiptMark extends StatelessWidget {
+  const _FromReceiptMark();
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'From the receipt scan',
+      child: Icon(
+        Icons.auto_awesome,
+        size: 18,
+        color: Theme.of(context).colorScheme.primary,
       ),
     );
   }

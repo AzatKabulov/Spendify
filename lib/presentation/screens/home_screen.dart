@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/transaction.dart';
 import '../providers/budget_providers.dart';
 import '../providers/category_providers.dart';
+import '../providers/receipt_scan_providers.dart';
 import '../providers/transaction_providers.dart';
 import '../widgets/balance_card.dart';
 import '../widgets/budget_warning_banner.dart';
@@ -12,6 +13,7 @@ import '../widgets/sync_status_indicator.dart';
 import '../widgets/transaction_list_tile.dart';
 import 'budgets_screen.dart';
 import 'categories_screen.dart';
+import 'receipt_scan_screen.dart';
 import 'reports_screen.dart';
 import 'settings_screen.dart';
 import 'transaction_form_screen.dart';
@@ -95,10 +97,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openAddForm,
-        icon: const Icon(Icons.add),
-        label: const Text('Add'),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: <Widget>[
+          if (ref.watch(receiptScanConfiguredProvider))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: FloatingActionButton.small(
+                heroTag: 'scan',
+                tooltip: 'Scan receipt',
+                onPressed: () => _push(const ReceiptScanScreen()),
+                child: const Icon(Icons.document_scanner_outlined),
+              ),
+            ),
+          FloatingActionButton.extended(
+            heroTag: 'add',
+            onPressed: _openAddForm,
+            icon: const Icon(Icons.add),
+            label: const Text('Add'),
+          ),
+        ],
       ),
       body: Column(
         children: <Widget>[

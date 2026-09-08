@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Firebase Auth (Phase 5), Firestore sync (Phase 6) and the Gemini
+         receipt scanner (Phase 7) all need network access. Debug builds get
+         this automatically; release builds do not, so declare it here. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:label="Spendly"
         android:name="${applicationName}"

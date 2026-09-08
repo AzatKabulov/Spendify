@@ -246,11 +246,22 @@ These are written commitments in a graded document, and they cut against common 
 
 ## 9. Open decisions to raise, not silently resolve
 
-**Gemini API key placement.** A key shipped inside an APK is extractable, so a client-side key is a genuine security weakness given the app handles financial data. Two honest options:
+**Gemini API key placement — PROVISIONAL (confirm with supervisor before CP2 submission).**
+A key shipped inside an APK is extractable, so a client-side key is a genuine
+security weakness given the app handles financial data. Two honest options:
 - **Better:** proxy Gemini calls through a Firebase Cloud Function so the key stays server-side (requires Blaze plan for outbound calls).
 - **Acceptable for a capstone:** key in client with API restrictions, *documented as a known limitation* in the CP2 report.
 
-This must be decided deliberately in Phase 7 and written down. Do not just pick one silently.
+**Phase 7 built option B's *mechanics*** (`GEMINI_API_KEY` via `--dart-define`,
+never in tracked source; `GeminiReceiptClient` behind
+`ReceiptScannerRepository`) because option A needs a Blaze plan + a deployed
+Cloud Function that could not be set up at the time, and the client sits behind
+an interface so switching to A later changes one file's endpoint and drops the
+key. **This is not final** — decide deliberately with the supervisor, apply
+Google Cloud API key restrictions (Android app + API restriction to
+Generative Language API) if staying with B, and record the outcome + rationale
+here. If moving to A, point `GeminiReceiptClient`'s `endpoint` at the function
+URL and pass an empty key.
 
 **Streak break rule.** Does a missed day reset the streak to zero, or decay it? Decide and document in Phase 8.
 

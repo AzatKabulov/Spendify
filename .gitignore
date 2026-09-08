@@ -45,6 +45,9 @@ firebase.json
 .env
 .env.*
 *.env
+# --dart-define-from-file payloads (may hold GEMINI_API_KEY)
+secrets.json
+dart_defines.json
 # Signing material
 *.keystore
 *.jks

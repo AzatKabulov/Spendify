@@ -97,13 +97,16 @@ class TransactionActions {
   final Clock clock;
   final IdGenerator newId;
 
-  /// Create a manual transaction and remember its category as last-used.
+  /// Create a transaction and remember its category as last-used. [source]
+  /// is [TransactionSource.scanned] when it came from the receipt scanner
+  /// (Phase 7).
   Future<Transaction> create({
     required int amountMinor,
     required TransactionType type,
     required String categoryId,
     required DateTime date,
     String? note,
+    TransactionSource source = TransactionSource.manual,
   }) async {
     final txn = Transaction.create(
       id: newId(),
@@ -114,6 +117,7 @@ class TransactionActions {
       date: _dateOnly(date),
       now: clock(),
       note: _trimToNull(note),
+      source: source,
     );
     final saved = await _repo.add(txn);
     await _aggregates.applyCreate(saved);
