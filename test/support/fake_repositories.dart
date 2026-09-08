@@ -4,10 +4,12 @@ import 'package:spendly/data/repositories/default_categories.dart';
 import 'package:spendly/domain/entities/budget.dart';
 import 'package:spendly/domain/entities/category.dart';
 import 'package:spendly/domain/entities/enums.dart';
+import 'package:spendly/domain/entities/period_aggregate.dart';
 import 'package:spendly/domain/entities/syncable.dart';
 import 'package:spendly/domain/entities/transaction.dart';
 import 'package:spendly/domain/repositories/budget_repository.dart';
 import 'package:spendly/domain/repositories/category_repository.dart';
+import 'package:spendly/domain/repositories/period_aggregate_repository.dart';
 import 'package:spendly/domain/repositories/transaction_repository.dart';
 import 'package:spendly/data/local/app_preferences.dart';
 
@@ -161,6 +163,81 @@ class FakeCategoryRepository extends _InMemorySyncableRepository<Category>
       _store[c.id] = c;
     }
     _notify();
+  }
+}
+
+class FakePeriodAggregateRepository implements PeriodAggregateRepository {
+  final Map<String, PeriodAggregate> store = <String, PeriodAggregate>{};
+  final Set<void Function()> _listeners = <void Function()>{};
+
+  void _notify() {
+    for (final fn in _listeners.toList()) {
+      fn();
+    }
+  }
+
+  @override
+  Future<PeriodAggregate?> getById(String id) async => store[id];
+
+  @override
+  Future<List<PeriodAggregate>> getAll() async =>
+      store.values.toList(growable: false);
+
+  @override
+  Future<List<PeriodAggregate>> getByPeriodType(PeriodType periodType) async =>
+      store.values.where((a) => a.periodType == periodType).toList();
+
+  @override
+  Future<List<PeriodAggregate>> getForPeriodKey({
+    required PeriodType periodType,
+    required String periodKey,
+  }) async => store.values
+      .where((a) => a.periodType == periodType && a.periodKey == periodKey)
+      .toList();
+
+  @override
+  Future<void> put(PeriodAggregate aggregate) async {
+    store[aggregate.id] = aggregate;
+    _notify();
+  }
+
+  @override
+  Future<void> putAll(List<PeriodAggregate> aggregates) async {
+    for (final a in aggregates) {
+      store[a.id] = a;
+    }
+    _notify();
+  }
+
+  @override
+  Future<void> removeAll(List<String> ids) async {
+    for (final id in ids) {
+      store.remove(id);
+    }
+    _notify();
+  }
+
+  @override
+  Future<void> clear() async {
+    store.clear();
+    _notify();
+  }
+
+  @override
+  Stream<List<PeriodAggregate>> watchAll() {
+    late final StreamController<List<PeriodAggregate>> c;
+    void emit() {
+      if (!c.isClosed) c.add(store.values.toList(growable: false));
+    }
+
+    c = StreamController<List<PeriodAggregate>>(
+      onListen: () {
+        _listeners.add(emit);
+        emit();
+      },
+      onCancel: () => _listeners.remove(emit),
+    );
+    return c.stream;
   }
 }
 

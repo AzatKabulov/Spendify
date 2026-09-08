@@ -78,7 +78,7 @@ void main() {
         now: DateTime.utc(2026, 9, 1),
       ),
     );
-    await repos.transactions.add(
+    await repos.seedTransaction(
       Transaction.create(
         id: 't-coffee',
         userId: kLocalUserId,

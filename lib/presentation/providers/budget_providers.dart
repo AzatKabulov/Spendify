@@ -6,7 +6,9 @@ import '../../core/id_generator.dart';
 import '../../domain/entities/budget.dart';
 import '../../domain/entities/enums.dart';
 import '../../domain/entities/patch.dart';
+import '../../domain/entities/period_aggregate.dart';
 import '../../domain/repositories/budget_repository.dart';
+import '../../domain/services/aggregation_service.dart';
 import '../../domain/services/budget_evaluator.dart';
 import 'repository_providers.dart';
 import 'transaction_providers.dart';
@@ -24,19 +26,37 @@ final budgetsProvider = StreamProvider<List<Budget>>((ref) {
   });
 });
 
+/// The current-period expense aggregate id for a budget.
+String _budgetAggregateId(Budget budget, DateTime now) {
+  final periodType = budget.period == BudgetPeriod.weekly
+      ? PeriodType.weekly
+      : PeriodType.monthly;
+  return PeriodAggregate.buildId(
+    userId: kLocalUserId,
+    periodType: periodType,
+    periodKey: periodKeyFor(now, periodType),
+    categoryId: budget.categoryId,
+  );
+}
+
 /// Evaluated status of every budget for the current period.
 ///
-/// PHASE 4: replace with aggregate lookup — swap the `evaluateBudget` call
-/// (which scans the full transaction list) for a `PeriodAggregate` read keyed
-/// by the budget's period + category. The widgets consuming this provider must
-/// not change.
+/// Phase 4: aggregate-backed. `spentMinor` is read straight from the cached
+/// `PeriodAggregate` for the budget's `(period, category)` — no transaction
+/// scan. The Monday-start ISO week / calendar-month boundaries are identical to
+/// Phase 3's `BudgetEvaluator`, so the numbers match. Widgets are unchanged.
 final budgetStatusesProvider = Provider<List<BudgetStatus>>((ref) {
   final budgets = ref.watch(budgetsProvider).value ?? const [];
-  final transactions = ref.watch(transactionsProvider).value ?? const [];
+  final aggregates = ref.watch(periodAggregatesProvider).value ?? const [];
   final now = ref.watch(localTimeProvider)();
+  final byId = {for (final a in aggregates) a.id: a};
   return [
     for (final b in budgets)
-      evaluateBudget(budget: b, transactions: transactions, now: now),
+      budgetStatusFromSpent(
+        budget: b,
+        spentMinor: byId[_budgetAggregateId(b, now)]?.totalExpenseMinor ?? 0,
+        now: now,
+      ),
   ];
 });
 

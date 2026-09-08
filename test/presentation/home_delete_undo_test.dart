@@ -30,7 +30,7 @@ void main() {
 
   testWidgets('a seeded transaction appears in the list', (tester) async {
     final repos = await pumpSpendly(tester, home: const HomeScreen());
-    await repos.transactions.add(sampleTxn());
+    await repos.seedTransaction(sampleTxn());
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Lunch canary'), findsOneWidget);
@@ -39,7 +39,7 @@ void main() {
 
   testWidgets('swipe deletes the row; UNDO restores it', (tester) async {
     final repos = await pumpSpendly(tester, home: const HomeScreen());
-    await repos.transactions.add(sampleTxn());
+    await repos.seedTransaction(sampleTxn());
     await tester.pumpAndSettle();
 
     await tester.drag(
@@ -66,13 +66,13 @@ void main() {
 
   testWidgets('balance = income − expense, formatted', (tester) async {
     final repos = await pumpSpendly(tester, home: const HomeScreen());
-    await repos.transactions.add(
+    await repos.seedTransaction(
       sampleTxn(id: 'i', type: TransactionType.income, amountMinor: 100000),
     );
-    await repos.transactions.add(
+    await repos.seedTransaction(
       sampleTxn(id: 'e1', amountMinor: 25000, note: 'a'),
     );
-    await repos.transactions.add(
+    await repos.seedTransaction(
       sampleTxn(id: 'e2', amountMinor: 15000, note: 'b'),
     );
     await tester.pumpAndSettle();
@@ -83,7 +83,7 @@ void main() {
 
   testWidgets('tapping a row opens the edit form pre-filled', (tester) async {
     final repos = await pumpSpendly(tester, home: const HomeScreen());
-    await repos.transactions.add(sampleTxn(amountMinor: 4200));
+    await repos.seedTransaction(sampleTxn(amountMinor: 4200));
     await tester.pumpAndSettle();
 
     await tester.tap(find.textContaining('Lunch canary'));

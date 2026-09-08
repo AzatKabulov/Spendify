@@ -93,12 +93,12 @@ void main() {
     final repos = await pumpSpendly(tester, home: const HomeScreen());
     await repos.budgets.add(overallMonthly(10000)); // RM 100 monthly
 
-    await repos.transactions.add(sepExpense('e1', 6000));
+    await repos.seedTransaction(sepExpense('e1', 6000));
     await tester.pumpAndSettle();
     // 60% used -> safe, no banner
     expect(find.textContaining('budget'), findsNothing);
 
-    await repos.transactions.add(sepExpense('e2', 5000)); // now 110%
+    await repos.seedTransaction(sepExpense('e2', 5000)); // now 110%
     await tester.pumpAndSettle();
 
     expect(find.byIcon(Icons.error_outline), findsWidgets);

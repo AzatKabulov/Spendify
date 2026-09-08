@@ -9,18 +9,18 @@ import '../../domain/entities/enums.dart';
 /// `--dart-define=DEV_SEED_TRANSACTIONS=<n>` is passed. Never runs in release.
 ///
 ///     flutter run --dart-define=DEV_SEED_TRANSACTIONS=1000
-Future<void> maybeDevSeedTransactions(HiveStore store) async {
+Future<bool> maybeDevSeedTransactions(HiveStore store) async {
   const raw = String.fromEnvironment('DEV_SEED_TRANSACTIONS');
   final target = int.tryParse(raw) ?? 0;
-  if (target <= 0) return;
-  if (store.transactions.length >= target) return;
+  if (target <= 0) return false;
+  if (store.transactions.length >= target) return false;
 
   final rng = Random(42);
   final categoryIds = store.categories.values
       .where((c) => !c.isDeleted)
       .map((c) => c.id)
       .toList();
-  if (categoryIds.isEmpty) return;
+  if (categoryIds.isEmpty) return false;
 
   final now = DateTime.now().toUtc();
   // Income is rarer and always lands on the last category (typically "Other"),
@@ -55,4 +55,5 @@ Future<void> maybeDevSeedTransactions(HiveStore store) async {
     );
   }
   await store.transactions.putAll(batch);
+  return true;
 }

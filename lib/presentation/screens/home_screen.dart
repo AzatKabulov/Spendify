@@ -11,6 +11,8 @@ import '../widgets/empty_transactions_view.dart';
 import '../widgets/transaction_list_tile.dart';
 import 'budgets_screen.dart';
 import 'categories_screen.dart';
+import 'reports_screen.dart';
+import 'settings_screen.dart';
 import 'transaction_form_screen.dart';
 
 /// The app's home: balance header + budget warnings + recent transactions.
@@ -71,14 +73,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         title: const Text('Spendly'),
         actions: <Widget>[
           IconButton(
+            tooltip: 'Reports',
+            icon: const Icon(Icons.bar_chart_outlined),
+            onPressed: () => _push(const ReportsScreen()),
+          ),
+          IconButton(
             tooltip: 'Budgets',
             icon: const Icon(Icons.account_balance_wallet_outlined),
             onPressed: () => _push(const BudgetsScreen()),
           ),
-          IconButton(
-            tooltip: 'Categories',
-            icon: const Icon(Icons.category_outlined),
-            onPressed: () => _push(const CategoriesScreen()),
+          PopupMenuButton<int>(
+            onSelected: (choice) => _push(
+              choice == 0 ? const CategoriesScreen() : const SettingsScreen(),
+            ),
+            itemBuilder: (context) => const <PopupMenuEntry<int>>[
+              PopupMenuItem<int>(value: 0, child: Text('Categories')),
+              PopupMenuItem<int>(value: 1, child: Text('Settings')),
+            ],
           ),
         ],
       ),

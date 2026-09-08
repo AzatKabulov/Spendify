@@ -48,4 +48,9 @@ class MetaKeys {
   /// Id of the category chosen on the most recent transaction save. Used to
   /// pre-select the category on the add form (CLAUDE.md §6, 60-second target).
   static const String lastUsedCategoryId = 'last_used_category_id';
+
+  /// Set once the Phase 4 PeriodAggregate cache has been built for pre-existing
+  /// Phase 2/3 data. Bump the suffix to force a one-off rebuild after a change
+  /// to the aggregation logic.
+  static const String aggregatesBuilt = 'aggregates_built_v1';
 }

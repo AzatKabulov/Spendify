@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:hive/hive.dart';
 
 import '../../domain/entities/enums.dart';
@@ -14,6 +16,27 @@ class HivePeriodAggregateRepository implements PeriodAggregateRepository {
 
   @override
   Future<PeriodAggregate?> getById(String id) async => _box.get(id)?.toDomain();
+
+  @override
+  Future<List<PeriodAggregate>> getAll() async =>
+      _box.values.map((a) => a.toDomain()).toList(growable: false);
+
+  @override
+  Stream<List<PeriodAggregate>> watchAll() {
+    final controller = StreamController<List<PeriodAggregate>>();
+    StreamSubscription<BoxEvent>? sub;
+    Future<void> emit() async {
+      if (!controller.isClosed) controller.add(await getAll());
+    }
+
+    controller
+      ..onListen = () {
+        sub = _box.watch().listen((_) => emit());
+        emit();
+      }
+      ..onCancel = () async => sub?.cancel();
+    return controller.stream;
+  }
 
   @override
   Future<List<PeriodAggregate>> getByPeriodType(PeriodType periodType) async =>
@@ -40,6 +63,9 @@ class HivePeriodAggregateRepository implements PeriodAggregateRepository {
       _box.putAll(<String, PeriodAggregateModel>{
         for (final a in aggregates) a.id: a.toModel(),
       });
+
+  @override
+  Future<void> removeAll(List<String> ids) => _box.deleteAll(ids);
 
   @override
   Future<void> clear() => _box.clear();

@@ -4,6 +4,7 @@ import '../../core/clock.dart';
 import '../../core/id_generator.dart';
 import '../../data/local/app_preferences.dart';
 import '../../data/local/hive_initializer.dart';
+import '../../data/repositories/aggregation_maintenance.dart';
 import '../../data/repositories/hive_advice_record_repository.dart';
 import '../../data/repositories/hive_budget_repository.dart';
 import '../../data/repositories/hive_category_repository.dart';
@@ -85,5 +86,13 @@ final periodAggregateRepositoryProvider = Provider<PeriodAggregateRepository>((
 ) {
   return HivePeriodAggregateRepository(
     ref.watch(hiveStoreProvider).periodAggregates,
+  );
+});
+
+/// Keeps the PeriodAggregate cache in step with transaction writes (Phase 4).
+final aggregationMaintenanceProvider = Provider<AggregationMaintenance>((ref) {
+  return AggregationMaintenance(
+    ref.watch(periodAggregateRepositoryProvider),
+    clock: ref.watch(clockProvider),
   );
 });

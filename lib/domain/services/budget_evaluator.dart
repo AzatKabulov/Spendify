@@ -124,6 +124,30 @@ BudgetStatus evaluateBudget({
   );
 }
 
+/// Builds a [BudgetStatus] from an already-known [spentMinor] — the Phase 4
+/// path, where `spentMinor` comes from a cached `PeriodAggregate` rather than a
+/// transaction scan. Period window + level logic is shared with [evaluateBudget]
+/// so the two stay consistent.
+BudgetStatus budgetStatusFromSpent({
+  required Budget budget,
+  required int spentMinor,
+  required DateTime now,
+}) {
+  final (periodStart, periodEnd) = budgetPeriodWindow(budget.period, now);
+  final limit = budget.limitAmountMinor;
+  final fraction = limit <= 0 ? 0.0 : spentMinor / limit;
+  return BudgetStatus(
+    budget: budget,
+    spentMinor: spentMinor,
+    limitMinor: limit,
+    remainingMinor: limit - spentMinor,
+    fractionUsed: fraction,
+    level: budgetLevelFor(fraction),
+    periodStart: periodStart,
+    periodEnd: periodEnd,
+  );
+}
+
 BudgetLevel budgetLevelFor(double fractionUsed) {
   if (fractionUsed > kBudgetExceededThreshold) return BudgetLevel.exceeded;
   if (fractionUsed >= kBudgetApproachingThreshold) {
