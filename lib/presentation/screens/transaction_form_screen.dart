@@ -131,12 +131,22 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     );
   }
 
-  Widget _form(BuildContext context, List<Category> categories) {
+  Widget _form(BuildContext context, List<Category> pickable) {
     // Lazily adopt the default category once categories are available. Only
     // fires while `_categoryId` is still unset (fresh add form).
     _categoryId ??=
         ref.watch(defaultNewTransactionCategoryProvider)?.id ??
-        (categories.isNotEmpty ? categories.first.id : null);
+        (pickable.isNotEmpty ? pickable.first.id : null);
+
+    // If editing a transaction whose category was since deleted, keep it in
+    // the dropdown (marked) so the field has a matching item and the user can
+    // still save without being forced to re-categorise.
+    final categories = <Category>[...pickable];
+    final currentId = _categoryId;
+    if (currentId != null && !categories.any((c) => c.id == currentId)) {
+      final deleted = ref.read(categoryDisplayProvider(currentId));
+      if (deleted != null) categories.add(deleted);
+    }
 
     return Form(
       key: _formKey,
@@ -191,7 +201,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
                     children: <Widget>[
                       CategoryAvatar(category: c, radius: 12),
                       const SizedBox(width: 8),
-                      Text(c.name),
+                      Text(c.isDeleted ? '${c.name} (deleted)' : c.name),
                     ],
                   ),
                 ),

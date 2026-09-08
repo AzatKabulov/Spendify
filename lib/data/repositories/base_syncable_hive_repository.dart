@@ -45,15 +45,22 @@ abstract class BaseSyncableHiveRepository<E extends Syncable<E>, M>
   }
 
   @override
-  Stream<List<E>> watchAll() {
-    // A StreamController (rather than `async*`) so the box subscription is
-    // attached synchronously on listen — otherwise a mutation made immediately
-    // after subscribing can land before `await for` starts and be missed.
+  Stream<List<E>> watchAll() => _watch(() async => getAll());
+
+  @override
+  Stream<List<E>> watchAllIncludingDeleted() =>
+      _watch(() async => _allDomain().toList(growable: false));
+
+  /// Emits [snapshot]() now and on every box change. A `StreamController`
+  /// (rather than `async*`) so the box subscription is attached synchronously
+  /// on listen — otherwise a mutation made immediately after subscribing can
+  /// land before the loop starts and be missed.
+  Stream<List<E>> _watch(Future<List<E>> Function() snapshot) {
     final controller = StreamController<List<E>>();
     StreamSubscription<BoxEvent>? watchSub;
 
     Future<void> emit() async {
-      if (!controller.isClosed) controller.add(await getAll());
+      if (!controller.isClosed) controller.add(await snapshot());
     }
 
     controller

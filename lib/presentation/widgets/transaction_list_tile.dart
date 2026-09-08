@@ -14,12 +14,17 @@ class TransactionListTile extends StatelessWidget {
     required this.transaction,
     required this.category,
     this.onTap,
+    this.categoryOverBudget = false,
     super.key,
   });
 
   final Transaction transaction;
   final Category? category;
   final VoidCallback? onTap;
+
+  /// When true, a quiet indicator shows that this transaction's category is
+  /// currently over its budget (informational only — see Phase 3 Part D).
+  final bool categoryOverBudget;
 
   @override
   Widget build(BuildContext context) {
@@ -33,10 +38,27 @@ class TransactionListTile extends StatelessWidget {
     return ListTile(
       onTap: onTap,
       leading: CategoryAvatar(category: category),
-      title: Text(
-        category?.name ?? 'Uncategorised',
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
+      title: Row(
+        children: <Widget>[
+          Flexible(
+            child: Text(
+              category?.name ?? 'Uncategorised',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (categoryOverBudget) ...<Widget>[
+            const SizedBox(width: 6),
+            Tooltip(
+              message: 'Category is over budget',
+              child: Icon(
+                Icons.error_outline,
+                size: 15,
+                color: theme.colorScheme.error,
+              ),
+            ),
+          ],
+        ],
       ),
       subtitle: Text(
         note == null || note.isEmpty

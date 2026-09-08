@@ -2,14 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/transaction.dart';
+import '../providers/budget_providers.dart';
 import '../providers/category_providers.dart';
 import '../providers/transaction_providers.dart';
 import '../widgets/balance_card.dart';
+import '../widgets/budget_warning_banner.dart';
 import '../widgets/empty_transactions_view.dart';
 import '../widgets/transaction_list_tile.dart';
+import 'budgets_screen.dart';
+import 'categories_screen.dart';
 import 'transaction_form_screen.dart';
 
-/// The app's home: balance header + recent transactions + add button.
+/// The app's home: balance header + budget warnings + recent transactions.
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -22,19 +26,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// swiped row disappears immediately and cleanly.
   final Set<String> _hiddenIds = <String>{};
 
-  Future<void> _openAddForm() {
-    return Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const TransactionFormScreen()),
-    );
+  Future<void> _push(Widget screen) {
+    return Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => screen));
   }
 
-  Future<void> _openEditForm(Transaction transaction) {
-    return Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => TransactionFormScreen(existing: transaction),
-      ),
-    );
-  }
+  Future<void> _openAddForm() => _push(const TransactionFormScreen());
+
+  Future<void> _openEditForm(Transaction transaction) =>
+      _push(TransactionFormScreen(existing: transaction));
 
   void _deleteWithUndo(Transaction transaction) {
     final messenger = ScaffoldMessenger.of(context);
@@ -59,12 +60,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final transactionsAsync = ref.watch(transactionsProvider);
-    final categoriesById = ref.watch(categoriesByIdProvider);
+    final categoriesById = ref.watch(allCategoriesByIdProvider);
     final balanceMinor = ref.watch(currentBalanceMinorProvider);
     final totals = ref.watch(currentTotalsProvider);
+    final warnings = ref.watch(budgetWarningsProvider);
+    final overBudgetCategories = ref.watch(overBudgetCategoryIdsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Spendly')),
+      appBar: AppBar(
+        title: const Text('Spendly'),
+        actions: <Widget>[
+          IconButton(
+            tooltip: 'Budgets',
+            icon: const Icon(Icons.account_balance_wallet_outlined),
+            onPressed: () => _push(const BudgetsScreen()),
+          ),
+          IconButton(
+            tooltip: 'Categories',
+            icon: const Icon(Icons.category_outlined),
+            onPressed: () => _push(const CategoriesScreen()),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _openAddForm,
         icon: const Icon(Icons.add),
@@ -77,9 +94,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             incomeMinor: totals.incomeMinor,
             expenseMinor: totals.expenseMinor,
           ),
+          BudgetWarningBanner(
+            warnings: warnings,
+            onTap: () => _push(const BudgetsScreen()),
+          ),
           Expanded(
             child: transactionsAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const SizedBox.shrink(),
               error: (e, _) => Center(child: Text('Could not load: $e')),
               data: (all) {
                 final visible = all
@@ -87,7 +108,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     .toList(growable: false);
                 if (visible.isEmpty) return const EmptyTransactionsView();
                 return ListView.builder(
-                  padding: const EdgeInsets.only(bottom: 96),
+                  padding: const EdgeInsets.only(top: 8, bottom: 96),
                   itemCount: visible.length,
                   itemBuilder: (context, index) {
                     final txn = visible[index];
@@ -99,6 +120,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: TransactionListTile(
                         transaction: txn,
                         category: categoriesById[txn.categoryId],
+                        categoryOverBudget: overBudgetCategories.contains(
+                          txn.categoryId,
+                        ),
                         onTap: () => _openEditForm(txn),
                       ),
                     );

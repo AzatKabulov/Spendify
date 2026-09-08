@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:spendly/data/repositories/default_categories.dart';
+import 'package:spendly/domain/entities/budget.dart';
 import 'package:spendly/domain/entities/category.dart';
 import 'package:spendly/domain/entities/enums.dart';
 import 'package:spendly/domain/entities/syncable.dart';
 import 'package:spendly/domain/entities/transaction.dart';
+import 'package:spendly/domain/repositories/budget_repository.dart';
 import 'package:spendly/domain/repositories/category_repository.dart';
 import 'package:spendly/domain/repositories/transaction_repository.dart';
 import 'package:spendly/data/local/app_preferences.dart';
@@ -14,17 +16,18 @@ import 'package:spendly/data/local/app_preferences.dart';
 /// the disk I/O that would need `tester.runAsync` in a widget test.
 abstract class _InMemorySyncableRepository<E extends Syncable<E>> {
   final Map<String, E> _store = <String, E>{};
-  final Set<StreamController<List<E>>> _listeners =
-      <StreamController<List<E>>>{};
+  final Set<void Function()> _listeners = <void Function()>{};
 
   DateTime now() => DateTime.utc(2026, 9, 8, 12);
 
   List<E> _live() =>
       _store.values.where((e) => !e.isDeleted).toList(growable: false);
 
+  List<E> _all() => _store.values.toList(growable: false);
+
   void _notify() {
-    for (final c in _listeners) {
-      if (!c.isClosed) c.add(_live());
+    for (final fn in _listeners.toList()) {
+      fn();
     }
   }
 
@@ -35,14 +38,22 @@ abstract class _InMemorySyncableRepository<E extends Syncable<E>> {
     return (e == null || e.isDeleted) ? null : e;
   }
 
-  Stream<List<E>> watchAll() {
+  Stream<List<E>> watchAll() => _watch(_live);
+
+  Stream<List<E>> watchAllIncludingDeleted() => _watch(_all);
+
+  Stream<List<E>> _watch(List<E> Function() snapshot) {
     late final StreamController<List<E>> c;
+    void emit() {
+      if (!c.isClosed) c.add(snapshot());
+    }
+
     c = StreamController<List<E>>(
       onListen: () {
-        _listeners.add(c);
-        c.add(_live());
+        _listeners.add(emit);
+        emit();
       },
-      onCancel: () => _listeners.remove(c),
+      onCancel: () => _listeners.remove(emit),
     );
     return c.stream;
   }
@@ -107,6 +118,25 @@ class FakeTransactionRepository extends _InMemorySyncableRepository<Transaction>
           .where((t) => t.categoryId == categoryId)
           .toList(growable: false)
         ..sort((a, b) => b.date.compareTo(a.date));
+}
+
+class FakeBudgetRepository extends _InMemorySyncableRepository<Budget>
+    implements BudgetRepository {
+  @override
+  Future<Budget?> getOverall() async {
+    for (final b in _live()) {
+      if (b.isOverall) return b;
+    }
+    return null;
+  }
+
+  @override
+  Future<Budget?> getForCategory(String categoryId) async {
+    for (final b in _live()) {
+      if (b.categoryId == categoryId) return b;
+    }
+    return null;
+  }
 }
 
 class FakeCategoryRepository extends _InMemorySyncableRepository<Category>

@@ -21,6 +21,11 @@ abstract interface class SyncableRepository<E extends Syncable<E>> {
   /// Emits the live record list now and again on every box change.
   Stream<List<E>> watchAll();
 
+  /// Like [watchAll] but includes soft-deleted records — for resolving the
+  /// name/icon of a deleted category on an old transaction row (Phase 3), and
+  /// for historical report aggregates (Phase 4).
+  Stream<List<E>> watchAllIncludingDeleted();
+
   /// Persist a new record. Returns the stored form (post-stamping).
   Future<E> add(E entity);
 

@@ -27,8 +27,14 @@ final hiveStoreProvider = Provider<HiveStore>(
   ),
 );
 
-/// Wall clock used by repositories for `updatedAt` stamping. Override in tests.
+/// Wall clock used by repositories for `updatedAt` stamping (UTC). Override in
+/// tests.
 final clockProvider = Provider<Clock>((ref) => systemClock);
+
+/// **Local** wall-clock "now", for calendar/period logic — budget periods
+/// (Phase 3), report periods (Phase 4). Distinct from [clockProvider], which is
+/// UTC for storage timestamps. Override in tests to pin the current period.
+final localTimeProvider = Provider<DateTime Function()>((ref) => DateTime.now);
 
 /// Id factory for new records. Override in tests for deterministic ids.
 final idGeneratorProvider = Provider<IdGenerator>((ref) => generateUuidV4);
