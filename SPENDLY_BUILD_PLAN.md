@@ -23,7 +23,7 @@ These aren't in the report but must be decided once and held, or the codebase dr
 
 ```
 lib/
-  core/           constants, errors, result types, DI setup
+  core/           constants, typed error classes, DI setup
   domain/
     entities/     plain Dart models (no Hive/Firebase imports)
     repositories/ abstract interfaces only

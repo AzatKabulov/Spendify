@@ -54,7 +54,7 @@ This inverts the usual Firebase pattern. Do not enable Firestore offline persist
 
 ```
 lib/
-  core/           constants, error types, Result type, DI setup
+  core/           constants, typed error classes, DI setup
   domain/
     entities/     plain Dart models — no Hive, no Firebase imports
     repositories/ abstract interfaces only
@@ -232,6 +232,7 @@ These are written commitments in a graded document, and they cut against common 
 - **Set `syncStatus = pending`** on any local mutation; the Sync Manager clears it.
 - Sync failures must never block or corrupt local writes. Local write succeeds first, sync is best-effort.
 - Prefer explicit error handling over silent catches. A swallowed sync error is a data-loss bug.
+- Repositories throw typed exceptions (e.g. `StorageException`), not `Result<T>`. Decided at Phase 4.1 — do not relitigate in later phases.
 - Null-safety throughout; no `!` unless provably safe.
 - Widget files stay presentational — business logic belongs in `domain/services` or repositories.
 - Write unit tests alongside pure logic (`BudgetEvaluator`, `GamificationEngine`, sync conflict resolution, Gemini response parsing), not as an afterthought.

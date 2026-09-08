@@ -54,10 +54,11 @@ class MetaKeys {
   /// pre-select the category on the add form (CLAUDE.md §6, 60-second target).
   static const String lastUsedCategoryId = 'last_used_category_id';
 
-  /// Set once the Phase 4 PeriodAggregate cache has been built for pre-existing
-  /// Phase 2/3 data. Bump the suffix to force a one-off rebuild after a change
-  /// to the aggregation logic.
-  static const String aggregatesBuilt = 'aggregates_built_v1';
+  /// Set once the PeriodAggregate cache has been built for pre-existing data.
+  /// Bump the suffix to force a one-off rebuild after a change to the
+  /// aggregation logic. `v2` (Phase 4.1): `PeriodType.daily` aggregates were
+  /// added, so every existing install rebuilds once to populate them.
+  static const String aggregatesBuilt = 'aggregates_built_v2';
 
   /// Holds the real Firebase UID that the Phase 1 placeholder `userId` was
   /// migrated to (Phase 5, CLAUDE.md §4.1). Absent = migration not yet

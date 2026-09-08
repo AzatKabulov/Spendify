@@ -16,7 +16,13 @@ enum TransactionSource { manual, scanned }
 enum BudgetPeriod { weekly, monthly }
 
 /// Granularity of a cached report aggregate.
-enum PeriodType { weekly, monthly, yearly }
+///
+/// `daily` (Phase 4.1) backs the "spend over time" day-by-day bars so that
+/// chart reads from the cache like every other report surface (CLAUDE.md §6),
+/// instead of scanning the viewed period's transactions. **Appended last** on
+/// purpose: the Hive adapter stores `Enum.index`, so existing rows keep their
+/// ordinals (weekly 0, monthly 1, yearly 2, daily 3).
+enum PeriodType { weekly, monthly, yearly, daily }
 
 /// Local-vs-remote reconciliation state for a syncable record.
 /// `pending` = has local changes not yet pushed; `synced` = matches remote.

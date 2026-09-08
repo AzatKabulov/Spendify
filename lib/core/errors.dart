@@ -1,14 +1,13 @@
 /// Error types for the data layer.
 ///
-/// Design note (Phase 1): repositories signal failure by **throwing** these
-/// typed exceptions rather than returning a `Result<T>` / `Either`. Rationale:
+/// Design note: repositories signal failure by **throwing** these typed
+/// exceptions rather than returning a `Result<T>` / `Either`. Rationale:
 ///   - it is the idiomatic Flutter/Dart shape, and Riverpod's `AsyncValue`
 ///     already models loading/error at the provider boundary;
 ///   - CLAUDE.md §8 asks for "explicit error handling over silent catches",
 ///     which typed exceptions + no bare `catch` satisfies.
-/// If a `Result` type is wanted later it can wrap these without touching call
-/// sites. This is a deliberate, flagged deviation from the "Result type"
-/// mentioned in the folder plan.
+/// Raised as an open flag every phase 1–4; **closed at Phase 4.1** — CLAUDE.md
+/// §8 now states this explicitly. Do not reintroduce `Result<T>`.
 library;
 
 /// Base class for every failure originating in local storage.

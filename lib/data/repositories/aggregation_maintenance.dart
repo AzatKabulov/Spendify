@@ -8,13 +8,15 @@ import '../../domain/repositories/period_aggregate_repository.dart';
 import '../../domain/services/aggregation_service.dart';
 
 /// Keeps the `PeriodAggregate` cache in step with transaction changes,
-/// **incrementally** — every write touches only the six aggregates that
-/// transaction contributes to (weekly/monthly/yearly × its category + the
+/// **incrementally** — every write touches only the eight aggregates that
+/// transaction contributes to (daily/weekly/monthly/yearly × its category + the
 /// period total), never the whole table.
 ///
 /// Consistency guarantee: after any sequence of [applyCreate] / [applyDelete] /
 /// [applyEdit], the cache must equal [rebuildAll] over the same transactions.
-/// The "50 random operations" test enforces this.
+/// The "50 random operations" test enforces this — and it exercises the daily
+/// buckets too now that `PeriodType.daily` is in `PeriodType.values`, which is
+/// what drives every loop below.
 class AggregationMaintenance {
   AggregationMaintenance(
     this._aggregates, {
@@ -113,7 +115,7 @@ class AggregationMaintenance {
       if (toPut.isNotEmpty) await _aggregates.putAll(toPut);
       if (toRemove.isNotEmpty) await _aggregates.removeAll(toRemove);
     } catch (error, stack) {
-      // The six aggregates are now inconsistent — surface it loudly rather
+      // The eight aggregates are now inconsistent — surface it loudly rather
       // than silently. rebuildAll() is the recovery path.
       debugPrint(
         'AGGREGATE MAINTENANCE FAILED for transaction ${t.id} (sign $sign): '

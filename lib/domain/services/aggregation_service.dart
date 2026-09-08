@@ -35,9 +35,12 @@ DateTime mondayOfIsoWeek(int weekYear, int week) {
 }
 
 /// Canonical `periodKey` for [date] at [type]:
-/// monthly `2026-09`, weekly `2026-W36`, yearly `2026`.
+/// daily `2026-09-05`, monthly `2026-09`, weekly `2026-W36`, yearly `2026`.
 String periodKeyFor(DateTime date, PeriodType type) {
   switch (type) {
+    case PeriodType.daily:
+      // No cross-year edge cases — just the calendar date.
+      return '${date.year}-${_two(date.month)}-${_two(date.day)}';
     case PeriodType.monthly:
       return '${date.year}-${_two(date.month)}';
     case PeriodType.yearly:
@@ -55,6 +58,15 @@ String periodKeyFor(DateTime date, PeriodType type) {
   String periodKey,
 ) {
   switch (type) {
+    case PeriodType.daily:
+      final parts = periodKey.split('-');
+      final year = int.parse(parts[0]);
+      final month = int.parse(parts[1]);
+      final day = int.parse(parts[2]);
+      return (
+        start: DateTime(year, month, day),
+        end: DateTime(year, month, day + 1),
+      );
     case PeriodType.monthly:
       final parts = periodKey.split('-');
       final year = int.parse(parts[0]);
@@ -83,6 +95,9 @@ String periodKeyFor(DateTime date, PeriodType type) {
 /// date that lands inside the target period.
 DateTime shiftPeriod(PeriodType type, DateTime anchor, int steps) {
   switch (type) {
+    case PeriodType.daily:
+      final d = DateTime(anchor.year, anchor.month, anchor.day);
+      return DateTime(d.year, d.month, d.day + steps);
     case PeriodType.monthly:
       return DateTime(anchor.year, anchor.month + steps, 1);
     case PeriodType.yearly:
@@ -93,8 +108,8 @@ DateTime shiftPeriod(PeriodType type, DateTime anchor, int steps) {
   }
 }
 
-/// The six aggregate ids a transaction contributes to:
-/// {weekly, monthly, yearly} × {its category, the period total}.
+/// The eight aggregate ids a transaction contributes to:
+/// {daily, weekly, monthly, yearly} × {its category, the period total}.
 List<String> aggregateIdsFor(Transaction t, String userId) {
   final ids = <String>[];
   for (final type in PeriodType.values) {
@@ -115,13 +130,20 @@ List<String> aggregateIdsFor(Transaction t, String userId) {
 }
 
 /// Full recomputation of every aggregate from [transactions]. The source of
-/// truth for correctness; [rebuildAllAggregates] on the maintenance repo calls
-/// this, and the "50 random ops" test compares incremental results against it.
+/// truth for correctness; `AggregationMaintenance.rebuildAll` calls this, and
+/// the "50 random ops" test compares incremental results against it.
 ///
 /// Rules (must match `BudgetEvaluator`): exclude `isDeleted`; bucket by
 /// `transaction.date`; keep income and expense separate; count every
 /// non-deleted transaction; emit both a per-category and a period-total
-/// aggregate for every `(periodType, periodKey)` that has any activity.
+/// aggregate for every `(periodType, periodKey)` that has any activity — across
+/// all four [PeriodType]s including `daily`.
+///
+/// Future consideration (not this pass): daily aggregates accumulate one row
+/// per active category per day, so the `period_aggregates` box grows faster
+/// than the monthly/yearly rows. Multi-year history stays well within Hive's
+/// comfort zone, but a retention/prune policy for very old daily rows could be
+/// added later if the box size ever matters.
 List<PeriodAggregate> computeAggregates({
   required Iterable<Transaction> transactions,
   required String userId,

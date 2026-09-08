@@ -101,6 +101,10 @@ class ReportsScreen extends ConsumerWidget {
         final last = b.end.subtract(const Duration(days: 1));
         final fmt = DateFormat('d MMM');
         return '${fmt.format(b.start)} – ${fmt.format(last)} · ${s.periodKey}';
+      case PeriodType.daily:
+        // Not user-selectable — daily is a storage granularity for the bar
+        // chart, not a report view. Handled for switch exhaustiveness.
+        return DateFormat('d MMM yyyy').format(s.bounds.start);
     }
   }
 }

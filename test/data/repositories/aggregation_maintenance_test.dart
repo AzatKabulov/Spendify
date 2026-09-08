@@ -54,17 +54,23 @@ void main() {
     sut = AggregationMaintenance(repo, clock: () => _now, userId: _userId);
   });
 
-  int monthlyExpense(String periodKey, {String? categoryId}) {
+  int expenseFor(PeriodType type, String periodKey, {String? categoryId}) {
     final id = PeriodAggregate.buildId(
       userId: _userId,
-      periodType: PeriodType.monthly,
+      periodType: type,
       periodKey: periodKey,
       categoryId: categoryId,
     );
     return repo.store[id]?.totalExpenseMinor ?? 0;
   }
 
-  test('create adds exactly the amount to all six aggregates', () async {
+  int monthlyExpense(String periodKey, {String? categoryId}) =>
+      expenseFor(PeriodType.monthly, periodKey, categoryId: categoryId);
+
+  int dailyExpense(String periodKey, {String? categoryId}) =>
+      expenseFor(PeriodType.daily, periodKey, categoryId: categoryId);
+
+  test('create adds exactly the amount to all eight aggregates', () async {
     await sut.applyCreate(
       tx(
         id: 't1',
@@ -74,9 +80,12 @@ void main() {
       ),
     );
 
-    expect(repo.store.length, 6);
+    // 4 period types (daily/weekly/monthly/yearly) x {category, total}.
+    expect(repo.store.length, 8);
     expect(monthlyExpense('2026-09'), 2500);
     expect(monthlyExpense('2026-09', categoryId: 'food'), 2500);
+    expect(dailyExpense('2026-09-10'), 2500);
+    expect(dailyExpense('2026-09-10', categoryId: 'food'), 2500);
     for (final agg in repo.store.values) {
       expect(agg.totalExpenseMinor, 2500);
       expect(agg.transactionCount, 1);
@@ -109,7 +118,8 @@ void main() {
     await sut.applyDelete(t);
     await sut.applyCreate(t); // undo == create
     expect(monthlyExpense('2026-09'), 2500);
-    expect(repo.store.length, 6);
+    expect(dailyExpense('2026-09-10'), 2500);
+    expect(repo.store.length, 8);
   });
 
   test('edit amount only updates the single set of buckets', () async {
@@ -124,7 +134,8 @@ void main() {
     await sut.applyEdit(before: before, after: after);
 
     expect(monthlyExpense('2026-09'), 4000);
-    expect(repo.store.length, 6);
+    expect(dailyExpense('2026-09-10'), 4000);
+    expect(repo.store.length, 8);
   });
 
   test('edit category: old category down, new up, total unchanged', () async {
@@ -191,6 +202,43 @@ void main() {
     expect(weekExpense('2026-W37'), 0);
     expect(weekExpense('2026-W38'), 800);
   });
+
+  test(
+    'EDIT DATE ACROSS A DAY BOUNDARY moves the daily aggregate (23rd -> 24th)',
+    () async {
+      final before = tx(
+        id: 't1',
+        date: DateTime(2026, 9, 23),
+        type: TransactionType.expense,
+        amountMinor: 1200,
+      );
+      await sut.applyCreate(before);
+      expect(dailyExpense('2026-09-23'), 1200);
+      expect(dailyExpense('2026-09-23', categoryId: 'food'), 1200);
+      expect(dailyExpense('2026-09-24'), 0);
+
+      final after = before.copyWith(date: DateTime(2026, 9, 24));
+      await sut.applyEdit(before: before, after: after);
+
+      expect(dailyExpense('2026-09-23'), 0);
+      expect(dailyExpense('2026-09-23', categoryId: 'food'), 0);
+      expect(dailyExpense('2026-09-24'), 1200);
+      expect(dailyExpense('2026-09-24', categoryId: 'food'), 1200);
+      // Same day is still in Sep / W39 / 2026, so those are untouched.
+      expect(monthlyExpense('2026-09'), 1200);
+      // The emptied daily rows are removed, not left at zero.
+      expect(
+        repo.store.containsKey(
+          PeriodAggregate.buildId(
+            userId: _userId,
+            periodType: PeriodType.daily,
+            periodKey: '2026-09-23',
+          ),
+        ),
+        isFalse,
+      );
+    },
+  );
 
   test(
     'after ~60 random create/edit/delete ops, incremental == rebuildAll',

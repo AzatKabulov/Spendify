@@ -64,6 +64,14 @@ class BudgetStatus {
 
 /// Evaluates [budget] against [transactions] as of [now].
 ///
+/// **Reference implementation only — no live call sites.** The app (via
+/// `budgetStatusesProvider`) uses [budgetStatusFromSpent] with a cached
+/// `PeriodAggregate` total instead of scanning. This function is the trusted
+/// oracle the aggregate path is checked against in
+/// `budget_reconciliation_test.dart` (300 randomized cases) and the direct
+/// unit tests in `budget_evaluator_test.dart`. Keep it — it is what makes a
+/// silent drift between the two period-boundary rules a failing test.
+///
 /// **[now] is injected, never `DateTime.now()`** — the period-boundary tests
 /// depend on being able to pin it.
 ///

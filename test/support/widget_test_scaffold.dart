@@ -12,6 +12,7 @@ import 'fake_repositories.dart';
 /// The in-memory repositories a pumped test is running against.
 class TestRepos {
   TestRepos({
+    required this.container,
     required this.transactions,
     required this.categories,
     required this.budgets,
@@ -20,6 +21,9 @@ class TestRepos {
     required this.maintenance,
   });
 
+  /// The pumped app's `ProviderContainer`, for reading providers directly
+  /// (e.g. `container.read(spendOverTimeProvider)`).
+  final ProviderContainer container;
   final FakeTransactionRepository transactions;
   final FakeCategoryRepository categories;
   final FakeBudgetRepository budgets;
@@ -82,6 +86,9 @@ Future<TestRepos> pumpSpendly(
   );
   await tester.pumpAndSettle();
   return TestRepos(
+    container: ProviderScope.containerOf(
+      tester.element(find.byType(MaterialApp)),
+    ),
     transactions: txnRepo,
     categories: catRepo,
     budgets: budgetRepo,

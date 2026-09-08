@@ -146,16 +146,17 @@ class SpendBar {
   final int expenseMinor;
 }
 
-/// Bars for the "spend over time" chart:
-///  - yearly  -> 12 months, read from the monthly period-total aggregates;
-///  - weekly  -> 7 days, weekly/monthly bucket the **viewed period's**
-///    transactions only (a bounded slice, never the whole history).
-///  - monthly -> one bar per day of the month.
+/// Bars for the "spend over time" chart — **all read from cached
+/// `PeriodAggregate`s** (CLAUDE.md §6), no transaction scan:
+///  - yearly  -> 12 bars, from the monthly period-total aggregates;
+///  - weekly  -> 7 bars, one per day, from the daily period-total aggregates;
+///  - monthly -> one bar per calendar day, from the daily period-total
+///    aggregates (Phase 4.1 — was a bounded transaction scan before).
 final spendOverTimeProvider = Provider<List<SpendBar>>((ref) {
   final selection = ref.watch(reportSelectionProvider);
+  final aggregates = ref.watch(periodAggregatesProvider).value ?? const [];
 
   if (selection.type == PeriodType.yearly) {
-    final aggregates = ref.watch(periodAggregatesProvider).value ?? const [];
     final year = int.parse(selection.periodKey);
     final byMonth = <String, int>{
       for (final a in aggregates)
@@ -171,30 +172,28 @@ final spendOverTimeProvider = Provider<List<SpendBar>>((ref) {
     ];
   }
 
-  // weekly / monthly: bucket the period's transactions by day.
+  // weekly / monthly: one bar per calendar day in the viewed window, each
+  // filled from that day's daily period-total aggregate.
   final bounds = selection.bounds;
-  final transactions = ref.watch(transactionsProvider).value ?? const [];
-  final inPeriod = transactions.where(
-    (t) =>
-        !t.isDeleted &&
-        t.type == TransactionType.expense &&
-        !t.date.isBefore(bounds.start) &&
-        t.date.isBefore(bounds.end),
-  );
-  final perDay = <int, int>{}; // day-offset from start -> expense
-  for (final t in inPeriod) {
-    final day = DateTime(t.date.year, t.date.month, t.date.day);
-    final offset = day.difference(bounds.start).inDays;
-    perDay[offset] = (perDay[offset] ?? 0) + t.amountMinor;
-  }
-  final dayCount = bounds.end.difference(bounds.start).inDays;
-  return [
-    for (var i = 0; i < dayCount; i++)
+  final byDay = <String, int>{
+    for (final a in aggregates)
+      if (a.periodType == PeriodType.daily && a.categoryId == null)
+        a.periodKey: a.totalExpenseMinor,
+  };
+  final bars = <SpendBar>[];
+  for (
+    var day = bounds.start;
+    day.isBefore(bounds.end);
+    day = DateTime(day.year, day.month, day.day + 1)
+  ) {
+    bars.add(
       SpendBar(
-        label: '${bounds.start.add(Duration(days: i)).day}',
-        expenseMinor: perDay[i] ?? 0,
+        label: '${day.day}',
+        expenseMinor: byDay[periodKeyFor(day, PeriodType.daily)] ?? 0,
       ),
-  ];
+    );
+  }
+  return bars;
 });
 
 String _monthAbbr(int m) => const [

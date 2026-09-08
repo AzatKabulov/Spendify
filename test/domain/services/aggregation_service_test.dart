@@ -35,6 +35,36 @@ void main() {
       expect(periodKeyFor(DateTime(2026, 12, 31), PeriodType.yearly), '2026');
     });
 
+    test('daily — zero-padded yyyy-MM-dd, incl. month/year rollover', () {
+      expect(
+        periodKeyFor(DateTime(2026, 9, 5), PeriodType.daily),
+        '2026-09-05',
+      );
+      expect(
+        periodKeyFor(DateTime(2026, 9, 30), PeriodType.daily),
+        '2026-09-30',
+      );
+      // 30 Sep -> 1 Oct rolls the month, no other edge behaviour.
+      expect(
+        periodKeyFor(DateTime(2026, 10, 1), PeriodType.daily),
+        '2026-10-01',
+      );
+      // 31 Dec -> 1 Jan rolls the year.
+      expect(
+        periodKeyFor(DateTime(2026, 12, 31), PeriodType.daily),
+        '2026-12-31',
+      );
+      expect(
+        periodKeyFor(DateTime(2027, 1, 1), PeriodType.daily),
+        '2027-01-01',
+      );
+      // A time component on the DateTime does not leak into the key.
+      expect(
+        periodKeyFor(DateTime(2026, 3, 9, 23, 59), PeriodType.daily),
+        '2026-03-09',
+      );
+    });
+
     test('weekly (ISO week) — normal dates', () {
       // 2026-09-08 is a Tuesday, ISO week 37.
       expect(periodKeyFor(DateTime(2026, 9, 8), PeriodType.weekly), '2026-W37');
@@ -110,6 +140,24 @@ void main() {
       ));
     });
 
+    test('daily — a single calendar day, incl. month-end rollover', () {
+      expect(periodBounds(PeriodType.daily, '2026-09-05'), (
+        start: DateTime(2026, 9, 5),
+        end: DateTime(2026, 9, 6),
+      ));
+      expect(periodBounds(PeriodType.daily, '2026-09-30'), (
+        start: DateTime(2026, 9, 30),
+        end: DateTime(2026, 10, 1),
+      ));
+      expect(periodBounds(PeriodType.daily, '2026-12-31'), (
+        start: DateTime(2026, 12, 31),
+        end: DateTime(2027, 1, 1),
+      ));
+      // round-trips with periodKeyFor
+      final b = periodBounds(PeriodType.daily, '2026-02-28');
+      expect(periodKeyFor(b.start, PeriodType.daily), '2026-02-28');
+    });
+
     test('weekly — round-trips with periodKeyFor', () {
       final b = periodBounds(PeriodType.weekly, '2026-W37');
       expect(b.start.weekday, DateTime.monday);
@@ -164,6 +212,23 @@ void main() {
         '2026-W38',
       );
     });
+
+    test('daily steps one calendar day, across month/year ends', () {
+      expect(
+        periodKeyFor(
+          shiftPeriod(PeriodType.daily, DateTime(2026, 9, 30), 1),
+          PeriodType.daily,
+        ),
+        '2026-10-01',
+      );
+      expect(
+        periodKeyFor(
+          shiftPeriod(PeriodType.daily, DateTime(2027, 1, 1), -1),
+          PeriodType.daily,
+        ),
+        '2026-12-31',
+      );
+    });
   });
 
   group('computeAggregates', () {
@@ -210,6 +275,27 @@ void main() {
       expect(
         aggs.where((a) => a.periodType == PeriodType.yearly).length,
         greaterThanOrEqualTo(3),
+      );
+      // ...and daily rows: 3 Sep and 4 Sep, each with a category + total row.
+      final daily = aggs
+          .where((a) => a.periodType == PeriodType.daily)
+          .toList();
+      expect(daily.length, 4);
+      expect(
+        daily
+            .firstWhere(
+              (a) => a.periodKey == '2026-09-03' && a.categoryId == null,
+            )
+            .totalExpenseMinor,
+        500,
+      );
+      expect(
+        daily
+            .firstWhere(
+              (a) => a.periodKey == '2026-09-04' && a.categoryId == 'transport',
+            )
+            .totalExpenseMinor,
+        300,
       );
     });
 
@@ -307,7 +393,7 @@ void main() {
     );
   });
 
-  test('aggregateIdsFor returns 6 ids (3 period types x category + total)', () {
+  test('aggregateIdsFor returns 8 ids (4 period types x category + total)', () {
     final ids = aggregateIdsFor(
       txn(
         DateTime(2026, 9, 8),
@@ -316,9 +402,9 @@ void main() {
       ),
       'u',
     );
-    expect(ids.length, 6);
-    expect(ids.toSet().length, 6); // all distinct
-    expect(ids.where((id) => id.endsWith('_food')).length, 3);
-    expect(ids.where((id) => id.endsWith('_all')).length, 3);
+    expect(ids.length, 8);
+    expect(ids.toSet().length, 8); // all distinct
+    expect(ids.where((id) => id.endsWith('_food')).length, 4);
+    expect(ids.where((id) => id.endsWith('_all')).length, 4);
   });
 }
