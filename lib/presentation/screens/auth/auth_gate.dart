@@ -24,25 +24,38 @@ class AuthGate extends ConsumerWidget {
       return const SignInScreen();
     }
     if (!session.ready) {
-      return const _PreparingScreen();
+      return _PreparingScreen(restoring: session.restoring);
     }
     return const HomeScreen();
   }
 }
 
 class _PreparingScreen extends StatelessWidget {
-  const _PreparingScreen();
+  const _PreparingScreen({required this.restoring});
+
+  final bool restoring;
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Setting up your account…'),
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(
+              restoring
+                  ? 'Restoring your data from backup…'
+                  : 'Setting up your account…',
+            ),
+            if (restoring) ...const <Widget>[
+              SizedBox(height: 8),
+              Text(
+                'This can take a moment on a large history.',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
           ],
         ),
       ),

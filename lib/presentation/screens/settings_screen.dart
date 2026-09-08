@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
+import '../../domain/entities/sync_snapshot.dart';
 import '../providers/auth_providers.dart';
 import '../providers/repository_providers.dart';
+import '../providers/sync_providers.dart';
 
 /// Minimal settings. Phase 10 fills this in (consent, AI toggles, wipe data);
 /// for now it hosts the account section (Phase 5) and the report-data rebuild
@@ -17,6 +20,16 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _rebuilding = false;
   bool _signingOut = false;
+  bool _syncing = false;
+
+  Future<void> _syncNow() async {
+    setState(() => _syncing = true);
+    try {
+      await ref.read(syncNowProvider)();
+    } finally {
+      if (mounted) setState(() => _syncing = false);
+    }
+  }
 
   Future<void> _rebuildAggregates() async {
     setState(() => _rebuilding = true);
@@ -65,6 +78,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final email = ref.watch(currentUserEmailProvider);
+    final syncAvailable = ref.watch(syncAvailableProvider);
+    final syncSnap =
+        ref.watch(syncSnapshotProvider).value ?? const SyncSnapshot();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
@@ -95,6 +111,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onTap: _signingOut ? null : _signOut,
           ),
           const Divider(),
+          const _SectionHeader('Backup & sync'),
+          if (!syncAvailable)
+            const ListTile(
+              leading: Icon(Icons.cloud_off_outlined),
+              title: Text('Backup not set up'),
+              subtitle: Text(
+                'Sync to the cloud becomes available once Firebase is '
+                'configured for this build.',
+              ),
+            )
+          else ...<Widget>[
+            ListTile(
+              leading: Icon(_syncIcon(syncSnap.phase)),
+              title: Text(_syncTitle(syncSnap)),
+              subtitle: Text(_syncSubtitle(syncSnap)),
+            ),
+            ListTile(
+              leading: const Icon(Icons.sync),
+              title: const Text('Sync now'),
+              trailing: (_syncing || syncSnap.isSyncing)
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : null,
+              onTap: (_syncing || syncSnap.isSyncing) ? null : _syncNow,
+            ),
+          ],
+          const Divider(),
           const _SectionHeader('Data'),
           ListTile(
             leading: const Icon(Icons.refresh),
@@ -116,6 +162,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
     );
   }
+}
+
+IconData _syncIcon(SyncPhase phase) => switch (phase) {
+  SyncPhase.syncing => Icons.cloud_sync_outlined,
+  SyncPhase.offline => Icons.cloud_off_outlined,
+  SyncPhase.error => Icons.sync_problem_outlined,
+  SyncPhase.idle => Icons.cloud_done_outlined,
+};
+
+String _syncTitle(SyncSnapshot s) => switch (s.phase) {
+  SyncPhase.syncing => 'Backing up…',
+  SyncPhase.offline => 'Offline',
+  SyncPhase.error => 'Last backup failed',
+  SyncPhase.idle => 'Backed up',
+};
+
+String _syncSubtitle(SyncSnapshot s) {
+  final parts = <String>[];
+  final at = s.lastSyncedAt;
+  if (at != null) {
+    parts.add('Last synced ${DateFormat('d MMM, HH:mm').format(at.toLocal())}');
+  } else {
+    parts.add('Not synced yet');
+  }
+  if (s.pendingCount > 0) {
+    parts.add('${s.pendingCount} pending');
+  }
+  if (s.phase == SyncPhase.error && s.lastError != null) {
+    parts.add(s.lastError!);
+  }
+  return parts.join(' · ');
 }
 
 class _SectionHeader extends StatelessWidget {

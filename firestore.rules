@@ -1,0 +1,64 @@
+rules_version = '2';
+
+// Spendly — Firestore security rules (Phase 6).
+//
+// Model: single-user backup/restore. Firestore is NOT the source of truth
+// (CLAUDE.md §3) — it is a per-user backup target. Every document lives under
+// users/{uid}/... and a user may touch ONLY their own subtree.
+//
+// PeriodAggregate and AdviceRecord are intentionally NOT synced (derived /
+// regenerable data — see data/repositories/sync_manager.dart), so there are no
+// rules for them and any write to such a path is denied by the default-deny.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // The document being written must claim the caller as its owner. Blocks a
+    // user from uploading a record stamped with someone else's userId.
+    function ownsPayload() {
+      return request.resource.data.userId == request.auth.uid;
+    }
+
+    match /users/{uid} {
+
+      // Optional per-user profile document (not used yet). Owner only.
+      allow read:  if isOwner(uid);
+      allow write: if isOwner(uid) && ownsPayload();
+
+      match /transactions/{docId} {
+        allow read:           if isOwner(uid);
+        allow create, update: if isOwner(uid) && ownsPayload();
+        allow delete:         if false; // tombstones only — never hard-delete
+      }
+
+      match /categories/{docId} {
+        allow read:           if isOwner(uid);
+        allow create, update: if isOwner(uid) && ownsPayload();
+        allow delete:         if false;
+      }
+
+      match /budgets/{docId} {
+        allow read:           if isOwner(uid);
+        allow create, update: if isOwner(uid) && ownsPayload();
+        allow delete:         if false;
+      }
+
+      // Single doc, id == uid (see sync_manager: users/{uid}/gamification/{uid}).
+      match /gamification/{docId} {
+        allow read:           if isOwner(uid);
+        allow create, update: if isOwner(uid) && ownsPayload();
+        allow delete:         if false;
+      }
+    }
+
+    // Anything not matched above is denied.
+  }
+}

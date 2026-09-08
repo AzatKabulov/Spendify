@@ -7,6 +7,7 @@ import '../../data/repositories/firebase_auth_repository.dart';
 import '../../data/repositories/unavailable_auth_repository.dart';
 import '../../domain/repositories/auth_repository.dart';
 import 'repository_providers.dart';
+import 'sync_providers.dart';
 import 'user_data_preparer.dart';
 
 /// Result of `initializeFirebase()` in `main()`. Overridden there; the default
@@ -55,9 +56,18 @@ final startupSessionProvider = Provider<AuthSession?>((ref) => null);
 /// `FirebaseAuth` stream (CLAUDE.md §3/§6: offline launch must not wait on
 /// Firebase).
 class Session {
-  const Session({this.uid, this.email, this.ready = false});
+  const Session({
+    this.uid,
+    this.email,
+    this.ready = false,
+    this.restoring = false,
+  });
 
-  const Session.signedOut() : uid = null, email = null, ready = false;
+  const Session.signedOut()
+    : uid = null,
+      email = null,
+      ready = false,
+      restoring = false;
 
   final String? uid;
   final String? email;
@@ -65,12 +75,22 @@ class Session {
   /// `true` once this user's local data is ready to show.
   final bool ready;
 
+  /// `true` while a fresh-install restore pull is running (Phase 6) — the
+  /// preparing screen says "Restoring…" instead of "Setting up…".
+  final bool restoring;
+
   bool get isSignedIn => uid != null;
 
-  Session copyWith({String? uid, String? email, bool? ready}) => Session(
+  Session copyWith({
+    String? uid,
+    String? email,
+    bool? ready,
+    bool? restoring,
+  }) => Session(
     uid: uid ?? this.uid,
     email: email ?? this.email,
     ready: ready ?? this.ready,
+    restoring: restoring ?? this.restoring,
   );
 }
 
@@ -98,12 +118,20 @@ class SessionNotifier extends Notifier<Session> {
     state = Session(uid: uid, email: email, ready: false);
     try {
       await ref.read(userDataPreparerProvider).prepareFor(uid);
+      // Phase 6: fresh install with an existing account -> pull the backup
+      // before showing home.
+      final bootstrap = ref.read(syncBootstrapProvider);
+      if (bootstrap.shouldRestore()) {
+        state = state.copyWith(restoring: true);
+        await bootstrap.restore();
+      }
     } catch (error, stack) {
       if (!kReleaseMode) {
         debugPrint('SESSION: data prep failed on sign-in: $error\n$stack');
       }
     }
-    state = state.copyWith(ready: true);
+    state = state.copyWith(ready: true, restoring: false);
+    ref.read(syncBootstrapProvider).startBackgroundSync();
   }
 
   void leave() => state = const Session.signedOut();

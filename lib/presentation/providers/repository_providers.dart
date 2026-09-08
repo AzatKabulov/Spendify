@@ -77,6 +77,7 @@ final gamificationStateRepositoryProvider =
     Provider<GamificationStateRepository>((ref) {
       return HiveGamificationStateRepository(
         ref.watch(hiveStoreProvider).gamificationState,
+        userId: requireCurrentUserId(ref),
         clock: ref.watch(clockProvider),
       );
     });

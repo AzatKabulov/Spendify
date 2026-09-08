@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -8,6 +10,7 @@ import 'data/local/hive_initializer.dart';
 import 'data/remote/firebase_bootstrap.dart';
 import 'presentation/providers/auth_providers.dart';
 import 'presentation/providers/repository_providers.dart';
+import 'presentation/providers/sync_providers.dart';
 import 'presentation/screens/auth/auth_gate.dart';
 
 /// Entry point.
@@ -48,6 +51,13 @@ Future<void> main() async {
         debugPrint('STARTUP: user data prep failed: $error\n$stack');
       }
     }
+    // Phase 6: start background sync (never blocks the first frame). If local
+    // data is missing (fresh reinstall), kick a non-blocking restore too.
+    final syncBootstrap = container.read(syncBootstrapProvider);
+    syncBootstrap.startBackgroundSync();
+    if (syncBootstrap.shouldRestore()) {
+      unawaited(syncBootstrap.restore());
+    }
   }
 
   if (!kReleaseMode) {
@@ -68,8 +78,34 @@ Future<void> main() async {
   );
 }
 
-class SpendlyApp extends StatelessWidget {
+class SpendlyApp extends ConsumerStatefulWidget {
   const SpendlyApp({super.key});
+
+  @override
+  ConsumerState<SpendlyApp> createState() => _SpendlyAppState();
+}
+
+class _SpendlyAppState extends ConsumerState<SpendlyApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Phase 6: opportunistic backup when the app comes back to the foreground.
+    if (state == AppLifecycleState.resumed) {
+      ref.read(syncManagerProvider)?.onAppResumed();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

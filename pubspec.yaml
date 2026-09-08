@@ -35,12 +35,19 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   flutter_riverpod: ^3.4.3
-  # Firebase — Authentication only in Phase 5. Firestore/Storage arrive in
-  # Phases 6/7. `firebase_auth` is imported by exactly one file
-  # (data/remote/firebase_auth_repository.dart) so the provider stays
-  # replaceable (CLAUDE.md §6 maintainability).
+  # Firebase. `firebase_auth` / `cloud_firestore` are each imported by exactly
+  # one file (data/remote/*) so the providers stay replaceable (CLAUDE.md §6).
+  # Firestore is a BACKUP/RESTORE target only — never read on a critical path
+  # (CLAUDE.md §3). Cloud Storage arrives in a later phase if needed.
   firebase_core: ^4.14.0
   firebase_auth: ^6.6.1
+  cloud_firestore: ^6.9.0
+  # Phase 6 — connectivity monitoring for the Sync Manager.
+  connectivity_plus: ^7.3.1
+  # Phase 7 — receipt capture + client-side compression (Report §3.5.1).
+  image_picker: ^1.2.3
+  flutter_image_compress: ^2.5.1
+  http: ^1.6.0
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   # Pinned to 10.3.x: 11.0.0 forces compileSdk 37, which has no plain

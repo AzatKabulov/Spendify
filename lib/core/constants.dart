@@ -65,4 +65,17 @@ class MetaKeys {
   /// completed; the migration re-runs on every launch until it finishes a full
   /// pass with zero placeholder records remaining.
   static const String userIdMigratedTo = 'user_id_migrated_to';
+
+  /// Per-collection pull cursor for the Sync Manager (Phase 6): the max remote
+  /// `updatedAt` (epoch ms) applied so far. Key is `sync_cursor_<collection>`.
+  static String syncCursor(String collectionPath) =>
+      'sync_cursor_$collectionPath';
+
+  /// Epoch-ms of the last fully successful sync. Drives the "last synced"
+  /// label in the UI.
+  static const String lastSyncedAt = 'last_synced_at';
+
+  /// Set once a fresh-install restore has completed for this device+account, so
+  /// the sign-in flow doesn't re-run the full restore pull every launch.
+  static const String restoreCompleted = 'restore_completed';
 }

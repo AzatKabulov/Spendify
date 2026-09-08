@@ -8,6 +8,7 @@ import '../providers/transaction_providers.dart';
 import '../widgets/balance_card.dart';
 import '../widgets/budget_warning_banner.dart';
 import '../widgets/empty_transactions_view.dart';
+import '../widgets/sync_status_indicator.dart';
 import '../widgets/transaction_list_tile.dart';
 import 'budgets_screen.dart';
 import 'categories_screen.dart';
@@ -72,6 +73,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       appBar: AppBar(
         title: const Text('Spendly'),
         actions: <Widget>[
+          const SyncStatusIndicator(),
           IconButton(
             tooltip: 'Reports',
             icon: const Icon(Icons.bar_chart_outlined),
