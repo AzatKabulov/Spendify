@@ -4,12 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/gemini_config.dart';
 import '../../data/remote/gemini_advice_client.dart';
 import '../../data/repositories/advice_coordinator.dart';
+import '../../data/repositories/unavailable_advice_generator.dart';
 import '../../domain/entities/advice_item.dart';
 import '../../domain/entities/enums.dart';
 import '../../domain/repositories/advice_generator_repository.dart';
 import '../../domain/services/advice_summary_builder.dart';
+import 'ai_providers.dart';
 import 'auth_providers.dart';
-import 'receipt_scan_providers.dart';
 import 'repository_providers.dart';
 import 'sync_providers.dart';
 
@@ -17,18 +18,21 @@ import 'sync_providers.dart';
 /// transactions produce noise, not insight (Phase 9 brief).
 const int kAdviceMinTransactions = 10;
 
-/// `true` when AI advice is available on this build. Shares the single Gemini
-/// key path with the scanner (`geminiApiKeyProvider`, CLAUDE.md §9). Phase 10
-/// adds a user-facing "disable AI" toggle on top of this.
+/// `true` when AI advice is usable — a key is present **and** the user has
+/// granted AI consent (Phase 10). Shares the single Gemini key path with the
+/// scanner (CLAUDE.md §9).
 final adviceConfiguredProvider = Provider<bool>(
-  (ref) => ref.watch(geminiApiKeyProvider).isNotEmpty,
+  (ref) => ref.watch(aiFeaturesEnabledProvider),
 );
 
-/// The Gemini text-advice client — the only advice-side file that talks to the
-/// API. Same key + model as the receipt client.
+/// The Gemini text-advice client. A real `GeminiAdviceClient` only when AI is
+/// enabled; otherwise a stub that fails fast with no network I/O (Phase 10).
 final adviceGeneratorRepositoryProvider = Provider<AdviceGeneratorRepository>((
   ref,
 ) {
+  if (!ref.watch(aiFeaturesEnabledProvider)) {
+    return const UnavailableAdviceGenerator();
+  }
   return GeminiAdviceClient(
     apiKey: ref.watch(geminiApiKeyProvider),
     model: kGeminiModel,
@@ -43,6 +47,24 @@ final adviceCoordinatorProvider = Provider<AdviceCoordinator>((ref) {
     userId: requireCurrentUserId(ref),
     clock: ref.watch(clockProvider),
     newId: ref.watch(idGeneratorProvider),
+  );
+});
+
+/// The exact aggregated summary that advice generation would send to Gemini,
+/// built from the current data. Powers the Phase 10 "See exactly what is sent"
+/// transparency view. Reads repositories directly (a `StreamProvider` snapshot
+/// can still be loading).
+final adviceSummaryPreviewProvider = FutureProvider<AdviceSummary>((ref) async {
+  final uid = ref.watch(currentUserIdProvider);
+  final aggregates =
+      (await ref.watch(periodAggregateRepositoryProvider).getAll())
+          .where((a) => a.userId == uid)
+          .toList(growable: false);
+  return buildAdviceSummary(
+    aggregates: aggregates,
+    budgets: await ref.watch(budgetRepositoryProvider).getAll(),
+    categories: await ref.watch(categoryRepositoryProvider).getAll(),
+    now: ref.watch(localTimeProvider)(),
   );
 });
 

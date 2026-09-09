@@ -78,4 +78,9 @@ class MetaKeys {
   /// Set once a fresh-install restore has completed for this device+account, so
   /// the sign-in flow doesn't re-run the full restore pull every launch.
   static const String restoreCompleted = 'restore_completed';
+
+  /// The user's AI consent decision (Phase 10 / CLAUDE.md §7). One of
+  /// `'granted'` / `'denied'`; absent = undecided (show the consent screen).
+  /// Device-level, not per-user and not synced.
+  static const String aiConsent = 'ai_consent';
 }

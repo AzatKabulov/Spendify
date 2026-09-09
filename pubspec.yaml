@@ -52,6 +52,9 @@ dependencies:
   # unchanged data. A Dart-team utility package (like uuid/intl), not a stack
   # choice; used only in data/repositories/advice_coordinator.dart.
   crypto: ^3.0.6
+  # Phase 10 — write the "Export my data" JSON file to app storage. Already a
+  # transitive dependency (image_picker); promoted to direct. First-party plugin.
+  path_provider: ^2.1.5
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   # Pinned to 10.3.x: 11.0.0 forces compileSdk 37, which has no plain

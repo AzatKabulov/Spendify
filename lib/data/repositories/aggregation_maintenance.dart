@@ -116,11 +116,14 @@ class AggregationMaintenance {
       if (toRemove.isNotEmpty) await _aggregates.removeAll(toRemove);
     } catch (error, stack) {
       // The eight aggregates are now inconsistent — surface it loudly rather
-      // than silently. rebuildAll() is the recovery path.
-      debugPrint(
-        'AGGREGATE MAINTENANCE FAILED for transaction ${t.id} (sign $sign): '
-        '$error\n$stack',
-      );
+      // than silently. rebuildAll() is the recovery path. Debug-only so no
+      // record ids reach a production log (Phase 10 audit).
+      if (!kReleaseMode) {
+        debugPrint(
+          'AGGREGATE MAINTENANCE FAILED for transaction ${t.id} (sign $sign): '
+          '$error\n$stack',
+        );
+      }
       rethrow;
     }
   }

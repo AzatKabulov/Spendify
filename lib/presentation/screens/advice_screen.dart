@@ -58,10 +58,10 @@ class _AdviceScreenState extends ConsumerState<AdviceScreen> {
         ),
         AdvicePhase.notConfigured => const _Centered(
           icon: Icons.cloud_off_outlined,
-          title: 'Insights aren’t set up in this build',
+          title: 'AI insights are off',
           body:
-              'AI advice needs a Gemini API key. The rest of Spendly works '
-              'without it.',
+              'Turn on AI features in Settings → Privacy & AI to get advice '
+              'from your spending. The rest of Spendly works without it.',
         ),
         AdvicePhase.notEnoughData => _Centered(
           icon: Icons.eco_outlined,

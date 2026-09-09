@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:spendly/core/constants.dart';
 import 'package:spendly/data/repositories/aggregation_maintenance.dart';
+import 'package:spendly/domain/entities/ai_consent.dart';
 import 'package:spendly/domain/entities/transaction.dart';
 import 'package:spendly/presentation/providers/advice_providers.dart';
+import 'package:spendly/presentation/providers/ai_providers.dart';
 import 'package:spendly/presentation/providers/auth_providers.dart';
-import 'package:spendly/presentation/providers/receipt_scan_providers.dart';
+import 'package:spendly/presentation/providers/privacy_providers.dart';
 import 'package:spendly/presentation/providers/repository_providers.dart';
 import 'package:spendly/presentation/providers/sync_providers.dart';
 
@@ -27,6 +29,8 @@ class TestRepos {
     required this.adviceCache,
     required this.adviceGenerator,
     required this.connectivity,
+    required this.aiPrefs,
+    required this.wiper,
   });
 
   /// The pumped app's `ProviderContainer`, for reading providers directly
@@ -42,6 +46,8 @@ class TestRepos {
   final FakeAdviceRecordRepository adviceCache;
   final FakeAdviceGenerator adviceGenerator;
   final FakeConnectivityMonitor connectivity;
+  final FakeAiPreferencesStore aiPrefs;
+  final FakeLocalDataWiper wiper;
 
   /// Add a transaction the way `TransactionActions` does — persist it **and**
   /// update the aggregate cache (which the balance / budget providers read).
@@ -65,6 +71,11 @@ Future<TestRepos> pumpSpendly(
   DateTime? now,
   String geminiApiKey = '',
   bool online = true,
+  AiConsent aiConsent = AiConsent.granted,
+
+  /// When true, also overrides `sessionProvider` with a ready signed-in
+  /// session — needed when [home] is `AuthGate` so it routes past sign-in.
+  bool signedInSession = false,
 }) async {
   final txnRepo = FakeTransactionRepository();
   final catRepo = FakeCategoryRepository();
@@ -78,6 +89,15 @@ Future<TestRepos> pumpSpendly(
   final adviceCache = FakeAdviceRecordRepository();
   final adviceGenerator = FakeAdviceGenerator();
   final connectivity = FakeConnectivityMonitor(startOnline: online);
+  final aiPrefs = FakeAiPreferencesStore(aiConsent);
+  final wiper = FakeLocalDataWiper(
+    transactions: txnRepo,
+    categories: catRepo,
+    budgets: budgetRepo,
+    aggregates: aggRepo,
+    gamification: gamificationRepo,
+    adviceCache: adviceCache,
+  );
   addTearDown(connectivity.close);
   await catRepo.ensureDefaultsSeeded();
   final localNow = now ?? DateTime(2026, 9, 15, 10);
@@ -100,6 +120,8 @@ Future<TestRepos> pumpSpendly(
         adviceRecordRepositoryProvider.overrideWithValue(adviceCache),
         adviceGeneratorRepositoryProvider.overrideWithValue(adviceGenerator),
         geminiApiKeyProvider.overrideWithValue(geminiApiKey),
+        aiPreferencesStoreProvider.overrideWithValue(aiPrefs),
+        localDataWiperProvider.overrideWithValue(wiper),
         connectivityMonitorProvider.overrideWithValue(connectivity),
         clockProvider.overrideWithValue(() => DateTime.utc(2026, 9, 8, 12)),
         localTimeProvider.overrideWithValue(() => localNow),
@@ -107,6 +129,8 @@ Future<TestRepos> pumpSpendly(
         // Signed-in as the placeholder user so uid-scoped providers resolve and
         // match the fake repos' seed data (Phase 5).
         currentUserIdProvider.overrideWithValue(kLocalUserId),
+        if (signedInSession)
+          sessionProvider.overrideWith(_ReadyLocalSession.new),
       ],
       child: MaterialApp(home: home),
     ),
@@ -126,5 +150,14 @@ Future<TestRepos> pumpSpendly(
     adviceCache: adviceCache,
     adviceGenerator: adviceGenerator,
     connectivity: connectivity,
+    aiPrefs: aiPrefs,
+    wiper: wiper,
   );
+}
+
+/// A ready, signed-in session as the placeholder user — for `AuthGate` tests.
+class _ReadyLocalSession extends SessionNotifier {
+  @override
+  Session build() =>
+      const Session(uid: kLocalUserId, email: 'demo@example.com', ready: true);
 }

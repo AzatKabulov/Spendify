@@ -4,25 +4,29 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/gemini_config.dart';
 import '../../data/local/receipt_image_processor.dart';
 import '../../data/remote/gemini_client.dart';
+import '../../data/repositories/unavailable_receipt_scanner.dart';
 import '../../domain/entities/receipt_extraction.dart';
 import '../../domain/repositories/connectivity_monitor.dart';
 import '../../domain/repositories/receipt_scanner_repository.dart';
 import '../../domain/services/category_matcher.dart';
+import 'ai_providers.dart';
 import 'category_providers.dart';
 import 'sync_providers.dart';
 
-/// The Gemini API key (overridable in tests). Empty = scanner not configured.
-final geminiApiKeyProvider = Provider<String>((ref) => kGeminiApiKey);
-
-/// `true` when receipt scanning is set up on this build (a key is present).
-/// Connectivity is checked at scan time, not here.
+/// `true` when receipt scanning is usable — a key is present **and** the user
+/// has granted AI consent (Phase 10). Connectivity is checked at scan time.
 final receiptScanConfiguredProvider = Provider<bool>(
-  (ref) => ref.watch(geminiApiKeyProvider).isNotEmpty,
+  (ref) => ref.watch(aiFeaturesEnabledProvider),
 );
 
+/// The receipt scanner. A real `GeminiReceiptClient` only when AI is enabled;
+/// otherwise a stub that fails fast with no network I/O (Phase 10).
 final receiptScannerRepositoryProvider = Provider<ReceiptScannerRepository>((
   ref,
 ) {
+  if (!ref.watch(aiFeaturesEnabledProvider)) {
+    return const UnavailableReceiptScanner();
+  }
   return GeminiReceiptClient(
     apiKey: ref.watch(geminiApiKeyProvider),
     model: kGeminiModel,

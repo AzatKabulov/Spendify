@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:spendly/core/clock.dart';
 import 'package:spendly/data/repositories/default_categories.dart';
+import 'package:spendly/data/repositories/local_data_wiper.dart';
 import 'package:spendly/domain/entities/advice_item.dart';
 import 'package:spendly/domain/entities/advice_record.dart';
+import 'package:spendly/domain/entities/ai_consent.dart';
 import 'package:spendly/domain/entities/budget.dart';
 import 'package:spendly/domain/entities/category.dart';
 import 'package:spendly/domain/entities/enums.dart';
@@ -20,6 +22,7 @@ import 'package:spendly/domain/repositories/gamification_state_repository.dart';
 import 'package:spendly/domain/repositories/period_aggregate_repository.dart';
 import 'package:spendly/domain/repositories/transaction_repository.dart';
 import 'package:spendly/domain/services/advice_summary_builder.dart';
+import 'package:spendly/data/local/ai_preferences_store.dart';
 import 'package:spendly/data/local/app_preferences.dart';
 
 /// In-memory synchronous stand-ins for the Hive repositories, for widget tests.
@@ -97,6 +100,12 @@ abstract class _InMemorySyncableRepository<E extends Syncable<E>> {
       .toList(growable: false);
 
   Future<E?> getByIdIncludingDeleted(String id) async => _store[id];
+
+  /// Test-only hard wipe (backs [FakeLocalDataWiper]).
+  void wipeForTest() {
+    _store.clear();
+    _notify();
+  }
 
   Future<void> upsertFromRemote(E entity) async {
     _store[entity.id] = entity;
@@ -262,6 +271,51 @@ class FakeAppPreferences implements AppPreferences {
   }
 }
 
+/// In-memory AI consent store (Phase 10).
+class FakeAiPreferencesStore implements AiPreferencesStore {
+  FakeAiPreferencesStore([this._consent = AiConsent.undecided]);
+
+  AiConsent _consent;
+
+  @override
+  AiConsent get consent => _consent;
+
+  @override
+  Future<void> setConsent(AiConsent value) async => _consent = value;
+}
+
+/// [LocalDataWiper] that clears the in-memory fakes it is handed (Phase 10).
+class FakeLocalDataWiper implements LocalDataWiper {
+  FakeLocalDataWiper({
+    required this.transactions,
+    required this.categories,
+    required this.budgets,
+    required this.aggregates,
+    required this.gamification,
+    required this.adviceCache,
+  });
+
+  final FakeTransactionRepository transactions;
+  final FakeCategoryRepository categories;
+  final FakeBudgetRepository budgets;
+  final FakePeriodAggregateRepository aggregates;
+  final FakeGamificationStateRepository gamification;
+  final FakeAdviceRecordRepository adviceCache;
+
+  bool wiped = false;
+
+  @override
+  Future<void> wipe() async {
+    transactions.wipeForTest();
+    categories.wipeForTest();
+    budgets.wipeForTest();
+    await aggregates.clear();
+    gamification.wipeForTest();
+    await adviceCache.clear();
+    wiped = true;
+  }
+}
+
 /// In-memory [GamificationStateRepository]. `watch()` emits the current (or a
 /// fresh initial) state on listen, then every change — matching the Hive repo.
 class FakeGamificationStateRepository implements GamificationStateRepository {
@@ -299,6 +353,9 @@ class FakeGamificationStateRepository implements GamificationStateRepository {
     _state = state;
     _controller.add(state);
   }
+
+  /// Test-only hard wipe (Phase 10 delete-all-data).
+  void wipeForTest() => _state = null;
 
   @override
   Future<void> markSynced() async {

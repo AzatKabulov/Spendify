@@ -294,6 +294,22 @@ past does **not** repair a broken streak, and a log whose action-day is on or
 before `lastActivityDate` (backdated entry, or a device clock moved back) leaves
 the streak and `lastActivityDate` untouched and pays no daily bonus.
 
+**AI consent + gating (decided, Phase 10).** One value — `AiConsent`
+(`undecided` / `granted` / `denied`) in the encrypted meta box (`MetaKeys.
+aiConsent`) — is *both* the consent record and the on/off toggle. It is
+**device-level, not per-user and not synced** (simplest defensible choice for a
+capstone; a stricter design would key it per-uid). `AuthGate` shows
+`AiConsentScreen` once when a Gemini key is present and consent is `undecided`.
+`aiFeaturesEnabledProvider` = key present **and** `granted`; when false, the
+Gemini client providers return `Unavailable*` stubs (no client constructed, no
+network) and the scan FAB / Insights entry points are hidden.
+
+**"Delete all local data" (decided, Phase 10).** Clears **every local Hive box +
+the auth session only**. It does **NOT** touch the Firestore backup, and the
+confirmation dialog says so explicitly ("sign in again to restore it"). The
+device encryption key is left in place (empty boxes protect nothing; regenerating
+risks a messy first launch). Recoverable by signing back in. `HiveLocalDataWiper`.
+
 ---
 
 ## 10. Common commands
