@@ -9,7 +9,9 @@ import '../../domain/entities/period_aggregate.dart';
 import '../../domain/repositories/budget_repository.dart';
 import '../../domain/services/aggregation_service.dart';
 import '../../domain/services/budget_evaluator.dart';
+import '../../domain/services/gamification_event_sink.dart';
 import 'auth_providers.dart';
+import 'gamification_providers.dart';
 import 'repository_providers.dart';
 import 'transaction_providers.dart';
 
@@ -95,6 +97,7 @@ final budgetStatusByIdProvider = Provider.family<BudgetStatus?, String>((
 final budgetActionsProvider = Provider<BudgetActions>((ref) {
   return BudgetActions(
     repository: ref.watch(budgetRepositoryProvider),
+    gamificationSink: ref.watch(gamificationEventSinkProvider),
     userId: requireCurrentUserId(ref),
     clock: ref.watch(clockProvider),
     newId: ref.watch(idGeneratorProvider),
@@ -107,9 +110,14 @@ class BudgetActions {
     required this.userId,
     required this.clock,
     required this.newId,
-  }) : _repo = repository;
+    GamificationEventSink? gamificationSink,
+  }) : _repo = repository,
+       _gamification = gamificationSink;
 
   final BudgetRepository _repo;
+
+  /// Raises the "budget created" event. `null` disables gamification (tests).
+  final GamificationEventSink? _gamification;
 
   /// The signed-in user new budgets are stamped with (Phase 5).
   final String userId;
@@ -120,9 +128,9 @@ class BudgetActions {
     required String? categoryId,
     required int limitAmountMinor,
     required BudgetPeriod period,
-  }) {
+  }) async {
     final now = clock();
-    return _repo.add(
+    final saved = await _repo.add(
       Budget.create(
         id: newId(),
         userId: userId,
@@ -133,6 +141,8 @@ class BudgetActions {
         now: now,
       ),
     );
+    _gamification?.budgetCreated(saved);
+    return saved;
   }
 
   Future<Budget> edit(

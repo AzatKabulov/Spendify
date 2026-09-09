@@ -1,11 +1,12 @@
 import 'dart:async';
 
-import 'package:spendly/core/clock.dart';
-import 'package:spendly/domain/entities/gamification_state.dart';
 import 'package:spendly/domain/repositories/connectivity_monitor.dart';
-import 'package:spendly/domain/repositories/gamification_state_repository.dart';
 import 'package:spendly/domain/repositories/remote_sync_gateway.dart';
 import 'package:spendly/domain/repositories/sync_metadata_store.dart';
+
+// Gamification fake lives with the other repository fakes; re-exported so the
+// sync tests that already import this file keep compiling.
+export 'fake_repositories.dart' show FakeGamificationStateRepository;
 
 /// In-memory [RemoteSyncGateway] — a fake "Firestore". Records every push and
 /// serves pulls from its own store. Configurable to throw for failure tests.
@@ -121,45 +122,4 @@ class InMemorySyncMetadataStore implements SyncMetadataStore {
 
   @override
   Future<void> markRestoreCompleted() async => _restoreCompleted = true;
-}
-
-/// In-memory [GamificationStateRepository] for tests.
-class FakeGamificationStateRepository implements GamificationStateRepository {
-  FakeGamificationStateRepository({String userId = 'u', Clock? clock})
-    : _ownerId = userId,
-      _clock = clock ?? systemClock;
-
-  final String _ownerId;
-  final Clock _clock;
-  GamificationState? _state;
-  final _controller = StreamController<GamificationState>.broadcast();
-
-  @override
-  Future<GamificationState?> get() async => _state;
-
-  @override
-  Future<GamificationState> getOrCreate() async =>
-      _state ??= GamificationState.initial(userId: _ownerId, now: _clock());
-
-  @override
-  Stream<GamificationState> watch() => _controller.stream;
-
-  @override
-  Future<GamificationState> save(GamificationState state) async {
-    _state = state.markUpdated(at: _clock());
-    _controller.add(_state!);
-    return _state!;
-  }
-
-  @override
-  Future<void> upsertFromRemote(GamificationState state) async {
-    _state = state;
-    _controller.add(state);
-  }
-
-  @override
-  Future<void> markSynced() async {
-    final s = _state;
-    if (s != null) _state = s.markSynced();
-  }
 }

@@ -28,13 +28,18 @@ class GamificationStateModelAdapter
       updatedAt: fields[8] as DateTime,
       syncStatus: fields[9] as SyncStatus,
       lastActivityDate: fields[6] as DateTime?,
+      transactionsLogged: fields[10] as int,
+      budgetsCreated: fields[11] as int,
+      budgetPeriodsWithinLimit: fields[12] as int,
+      scannedTransactionsLogged: fields[13] as int,
+      recentEventIds: (fields[14] as List).cast<String>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, GamificationStateModel obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(15)
       ..writeByte(0)
       ..write(obj.userId)
       ..writeByte(1)
@@ -54,7 +59,17 @@ class GamificationStateModelAdapter
       ..writeByte(8)
       ..write(obj.updatedAt)
       ..writeByte(9)
-      ..write(obj.syncStatus);
+      ..write(obj.syncStatus)
+      ..writeByte(10)
+      ..write(obj.transactionsLogged)
+      ..writeByte(11)
+      ..write(obj.budgetsCreated)
+      ..writeByte(12)
+      ..write(obj.budgetPeriodsWithinLimit)
+      ..writeByte(13)
+      ..write(obj.scannedTransactionsLogged)
+      ..writeByte(14)
+      ..write(obj.recentEventIds);
   }
 
   @override

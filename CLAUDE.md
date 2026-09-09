@@ -127,8 +127,18 @@ int xp, coins, level;
 int currentStreak, longestStreak;
 DateTime? lastActivityDate;
 List<String> unlockedBadgeIds;
+// --- Phase 8 additions (flagged deviation from the original field list) ---
+int transactionsLogged;       // lifetime, never decremented — drives count badges
+int budgetsCreated;
+int budgetPeriodsWithinLimit;
+int scannedTransactionsLogged;
+List<String> recentEventIds;  // bounded (300) idempotency + XP-reversal window
 // + updatedAt, syncStatus
 ```
+**Phase 8 deviation, flagged:** the five extra fields let the pure engine check
+every badge criterion and dedupe/reverse events from `GamificationState` alone —
+it never reaches into a repository. `recentEventIds` holds deterministic event
+ids (`log:<txnId>`, `del:<txnId>`, `bc:<budgetId>`, `bp:<budgetId>:<periodKey>`).
 
 ### Badge (static catalogue, not synced)
 ```dart
@@ -263,7 +273,17 @@ Generative Language API) if staying with B, and record the outcome + rationale
 here. If moving to A, point `GeminiReceiptClient`'s `endpoint` at the function
 URL and pass an empty key.
 
-**Streak break rule.** Does a missed day reset the streak to zero, or decay it? Decide and document in Phase 8.
+**Streak break rule (decided, Phase 8).** A fully missed local calendar day
+**breaks** the streak: the next log resets `currentStreak` to **1** (not 0 — the
+log that day still counts). Two or more logs on the same day advance the streak
+once. `longestStreak` is a high-water mark and never decreases. Day boundaries
+are local calendar days via UTC day-index arithmetic (DST/timezone-safe).
+
+**Backdating rule (decided, Phase 8).** Streaks track the *logging action's*
+wall-clock day, not the transaction's `date`. Logging a transaction dated in the
+past does **not** repair a broken streak, and a log whose action-day is on or
+before `lastActivityDate` (backdated entry, or a device clock moved back) leaves
+the streak and `lastActivityDate` untouched and pays no daily bonus.
 
 ---
 

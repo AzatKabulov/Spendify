@@ -9,8 +9,10 @@ import '../../domain/entities/patch.dart';
 import '../../domain/entities/period_aggregate.dart';
 import '../../domain/entities/transaction.dart';
 import '../../domain/repositories/transaction_repository.dart';
+import '../../domain/services/gamification_event_sink.dart';
 import '../../domain/services/transaction_ordering.dart';
 import 'auth_providers.dart';
+import 'gamification_providers.dart';
 import 'repository_providers.dart';
 
 /// Live, display-ordered transaction list (newest date first; newest created
@@ -70,6 +72,7 @@ final transactionActionsProvider = Provider<TransactionActions>((ref) {
     repository: ref.watch(transactionRepositoryProvider),
     preferences: ref.watch(appPreferencesProvider),
     maintenance: ref.watch(aggregationMaintenanceProvider),
+    gamificationSink: ref.watch(gamificationEventSinkProvider),
     userId: requireCurrentUserId(ref),
     clock: ref.watch(clockProvider),
     newId: ref.watch(idGeneratorProvider),
@@ -84,13 +87,19 @@ class TransactionActions {
     required this.userId,
     required this.clock,
     required this.newId,
+    GamificationEventSink? gamificationSink,
   }) : _repo = repository,
        _prefs = preferences,
-       _aggregates = maintenance;
+       _aggregates = maintenance,
+       _gamification = gamificationSink;
 
   final TransactionRepository _repo;
   final AppPreferences _prefs;
   final AggregationMaintenance _aggregates;
+
+  /// Raises XP/coin/streak events after a write. `null` disables gamification
+  /// (tests). Fire-and-forget — never awaited, never blocks the write.
+  final GamificationEventSink? _gamification;
 
   /// The signed-in user new rows are stamped with (Phase 5).
   final String userId;
@@ -122,6 +131,7 @@ class TransactionActions {
     final saved = await _repo.add(txn);
     await _aggregates.applyCreate(saved);
     await _prefs.setLastUsedCategoryId(categoryId);
+    _gamification?.transactionLogged(saved);
     return saved;
   }
 
@@ -153,14 +163,19 @@ class TransactionActions {
     await _repo.delete(id);
     if (txn != null && !txn.isDeleted) {
       await _aggregates.applyDelete(txn);
+      _gamification?.transactionDeleted(txn);
     }
   }
 
-  /// Undo a [delete] — the row is live again, so it re-adds to the aggregates.
+  /// Undo a [delete] — the row is live again, so it re-adds to the aggregates
+  /// and counts as a fresh log for gamification (the engine nets the XP back).
   Future<void> restore(String id) async {
     await _repo.restore(id);
     final txn = await _repo.getById(id);
-    if (txn != null) await _aggregates.applyCreate(txn);
+    if (txn != null) {
+      await _aggregates.applyCreate(txn);
+      _gamification?.transactionLogged(txn);
+    }
   }
 
   static String? _trimToNull(String? s) {

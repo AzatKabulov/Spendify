@@ -1,15 +1,18 @@
 import 'dart:async';
 
+import 'package:spendly/core/clock.dart';
 import 'package:spendly/data/repositories/default_categories.dart';
 import 'package:spendly/domain/entities/budget.dart';
 import 'package:spendly/domain/entities/category.dart';
 import 'package:spendly/domain/entities/enums.dart';
+import 'package:spendly/domain/entities/gamification_state.dart';
 import 'package:spendly/domain/entities/period_aggregate.dart';
 import 'package:spendly/domain/entities/syncable.dart';
 import 'package:spendly/domain/entities/transaction.dart';
 import 'package:spendly/domain/repositories/auth_repository.dart';
 import 'package:spendly/domain/repositories/budget_repository.dart';
 import 'package:spendly/domain/repositories/category_repository.dart';
+import 'package:spendly/domain/repositories/gamification_state_repository.dart';
 import 'package:spendly/domain/repositories/period_aggregate_repository.dart';
 import 'package:spendly/domain/repositories/transaction_repository.dart';
 import 'package:spendly/data/local/app_preferences.dart';
@@ -251,6 +254,51 @@ class FakeAppPreferences implements AppPreferences {
   @override
   Future<void> setLastUsedCategoryId(String categoryId) async {
     _lastUsed = categoryId;
+  }
+}
+
+/// In-memory [GamificationStateRepository]. `watch()` emits the current (or a
+/// fresh initial) state on listen, then every change — matching the Hive repo.
+class FakeGamificationStateRepository implements GamificationStateRepository {
+  FakeGamificationStateRepository({String userId = 'u', Clock? clock})
+    : _ownerId = userId,
+      _clock = clock ?? systemClock;
+
+  final String _ownerId;
+  final Clock _clock;
+  GamificationState? _state;
+  final _controller = StreamController<GamificationState>.broadcast();
+
+  @override
+  Future<GamificationState?> get() async => _state;
+
+  @override
+  Future<GamificationState> getOrCreate() async =>
+      _state ??= GamificationState.initial(userId: _ownerId, now: _clock());
+
+  @override
+  Stream<GamificationState> watch() async* {
+    yield await getOrCreate();
+    yield* _controller.stream;
+  }
+
+  @override
+  Future<GamificationState> save(GamificationState state) async {
+    _state = state.markUpdated(at: _clock());
+    _controller.add(_state!);
+    return _state!;
+  }
+
+  @override
+  Future<void> upsertFromRemote(GamificationState state) async {
+    _state = state;
+    _controller.add(state);
+  }
+
+  @override
+  Future<void> markSynced() async {
+    final s = _state;
+    if (s != null) _state = s.markSynced();
   }
 }
 

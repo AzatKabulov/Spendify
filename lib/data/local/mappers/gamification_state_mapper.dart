@@ -11,6 +11,11 @@ extension GamificationStateModelMapper on GamificationStateModel {
     longestStreak: longestStreak,
     lastActivityDate: lastActivityDate,
     unlockedBadgeIds: List<String>.unmodifiable(unlockedBadgeIds),
+    transactionsLogged: transactionsLogged,
+    budgetsCreated: budgetsCreated,
+    budgetPeriodsWithinLimit: budgetPeriodsWithinLimit,
+    scannedTransactionsLogged: scannedTransactionsLogged,
+    recentEventIds: List<String>.unmodifiable(recentEventIds),
     updatedAt: updatedAt,
     syncStatus: syncStatus,
   );
@@ -26,6 +31,11 @@ extension GamificationStateEntityMapper on GamificationState {
     longestStreak: longestStreak,
     lastActivityDate: lastActivityDate,
     unlockedBadgeIds: List<String>.from(unlockedBadgeIds),
+    transactionsLogged: transactionsLogged,
+    budgetsCreated: budgetsCreated,
+    budgetPeriodsWithinLimit: budgetPeriodsWithinLimit,
+    scannedTransactionsLogged: scannedTransactionsLogged,
+    recentEventIds: List<String>.from(recentEventIds),
     updatedAt: updatedAt,
     syncStatus: syncStatus,
   );

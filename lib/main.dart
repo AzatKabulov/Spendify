@@ -9,6 +9,7 @@ import 'data/local/auth_session_store.dart';
 import 'data/local/hive_initializer.dart';
 import 'data/remote/firebase_bootstrap.dart';
 import 'presentation/providers/auth_providers.dart';
+import 'presentation/providers/gamification_providers.dart';
 import 'presentation/providers/repository_providers.dart';
 import 'presentation/providers/sync_providers.dart';
 import 'presentation/screens/auth/auth_gate.dart';
@@ -58,6 +59,9 @@ Future<void> main() async {
     if (syncBootstrap.shouldRestore()) {
       unawaited(syncBootstrap.restore());
     }
+    // Phase 8: award any budget period that ended while the app was closed.
+    // Off the first-frame path — fire-and-forget.
+    unawaited(container.read(gamificationReconcilerProvider).runIfSignedIn());
   }
 
   if (!kReleaseMode) {
@@ -101,9 +105,11 @@ class _SpendlyAppState extends ConsumerState<SpendlyApp>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Phase 6: opportunistic backup when the app comes back to the foreground.
     if (state == AppLifecycleState.resumed) {
+      // Phase 6: opportunistic backup when the app comes back to the foreground.
       ref.read(syncManagerProvider)?.onAppResumed();
+      // Phase 8: a budget period may have ended while we were backgrounded.
+      unawaited(ref.read(gamificationReconcilerProvider).runIfSignedIn());
     }
   }
 

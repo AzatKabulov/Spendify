@@ -20,6 +20,11 @@ class GamificationStateModel {
     required this.updatedAt,
     required this.syncStatus,
     this.lastActivityDate,
+    this.transactionsLogged = 0,
+    this.budgetsCreated = 0,
+    this.budgetPeriodsWithinLimit = 0,
+    this.scannedTransactionsLogged = 0,
+    this.recentEventIds = const <String>[],
   });
 
   @HiveField(0)
@@ -51,4 +56,21 @@ class GamificationStateModel {
 
   @HiveField(9)
   SyncStatus syncStatus;
+
+  // --- Phase 8 additions (field numbers are permanent, never renumber) ---
+
+  @HiveField(10)
+  int transactionsLogged;
+
+  @HiveField(11)
+  int budgetsCreated;
+
+  @HiveField(12)
+  int budgetPeriodsWithinLimit;
+
+  @HiveField(13)
+  int scannedTransactionsLogged;
+
+  @HiveField(14)
+  List<String> recentEventIds;
 }

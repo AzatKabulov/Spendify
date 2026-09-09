@@ -117,10 +117,14 @@ Map<String, Object?> gamificationToRemote(GamificationState g) =>
       'longestStreak': g.longestStreak,
       'lastActivityDate': g.lastActivityDate,
       'unlockedBadgeIds': g.unlockedBadgeIds,
+      'transactionsLogged': g.transactionsLogged,
+      'budgetsCreated': g.budgetsCreated,
+      'budgetPeriodsWithinLimit': g.budgetPeriodsWithinLimit,
+      'scannedTransactionsLogged': g.scannedTransactionsLogged,
+      'recentEventIds': g.recentEventIds,
       'updatedAt': g.updatedAt,
-      // Gamification carries no isDeleted (never deleted) — the gateway still
-      // needs the field for its default-deny-safe rules check to pass? No: the
-      // rules only check userId. Keep the doc minimal.
+      // No isDeleted — the row is never deleted; the security rules only check
+      // userId.
     };
 
 GamificationState gamificationFromRemote(Map<String, Object?> m) =>
@@ -133,6 +137,11 @@ GamificationState gamificationFromRemote(Map<String, Object?> m) =>
       longestStreak: _int(m['longestStreak']),
       lastActivityDate: _date(m['lastActivityDate']),
       unlockedBadgeIds: _stringList(m['unlockedBadgeIds']),
+      transactionsLogged: _int(m['transactionsLogged']),
+      budgetsCreated: _int(m['budgetsCreated']),
+      budgetPeriodsWithinLimit: _int(m['budgetPeriodsWithinLimit']),
+      scannedTransactionsLogged: _int(m['scannedTransactionsLogged']),
+      recentEventIds: _stringList(m['recentEventIds']),
       updatedAt: _date(m['updatedAt']) ?? _epoch,
       syncStatus: SyncStatus.synced,
     );

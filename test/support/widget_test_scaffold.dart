@@ -19,6 +19,7 @@ class TestRepos {
     required this.aggregates,
     required this.preferences,
     required this.maintenance,
+    required this.gamification,
   });
 
   /// The pumped app's `ProviderContainer`, for reading providers directly
@@ -30,6 +31,7 @@ class TestRepos {
   final FakePeriodAggregateRepository aggregates;
   final FakeAppPreferences preferences;
   final AggregationMaintenance maintenance;
+  final FakeGamificationStateRepository gamification;
 
   /// Add a transaction the way `TransactionActions` does — persist it **and**
   /// update the aggregate cache (which the balance / budget providers read).
@@ -57,6 +59,10 @@ Future<TestRepos> pumpSpendly(
   final budgetRepo = FakeBudgetRepository();
   final aggRepo = FakePeriodAggregateRepository();
   final prefs = FakeAppPreferences();
+  final gamificationRepo = FakeGamificationStateRepository(
+    userId: kLocalUserId,
+    clock: () => DateTime.utc(2026, 9, 8, 12),
+  );
   await catRepo.ensureDefaultsSeeded();
   final localNow = now ?? DateTime(2026, 9, 15, 10);
   final maintenance = AggregationMaintenance(
@@ -74,6 +80,7 @@ Future<TestRepos> pumpSpendly(
         budgetRepositoryProvider.overrideWithValue(budgetRepo),
         periodAggregateRepositoryProvider.overrideWithValue(aggRepo),
         appPreferencesProvider.overrideWithValue(prefs),
+        gamificationStateRepositoryProvider.overrideWithValue(gamificationRepo),
         clockProvider.overrideWithValue(() => DateTime.utc(2026, 9, 8, 12)),
         localTimeProvider.overrideWithValue(() => localNow),
         idGeneratorProvider.overrideWithValue(() => 'id-${idSeq++}'),
@@ -95,5 +102,6 @@ Future<TestRepos> pumpSpendly(
     aggregates: aggRepo,
     preferences: prefs,
     maintenance: maintenance,
+    gamification: gamificationRepo,
   );
 }

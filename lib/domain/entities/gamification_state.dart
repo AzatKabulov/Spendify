@@ -5,8 +5,10 @@ import 'patch.dart';
 /// (CLAUDE.md §4): the primary key is [userId], and it is never deleted, only
 /// updated. Still syncs, so it carries [updatedAt] + [syncStatus].
 ///
-/// Phase 1 only defines and persists it. The award rules that mutate it are
-/// the pure `GamificationEngine` in Phase 8.
+/// Phase 8 added the lifetime counters + [recentEventIds] so every badge
+/// criterion is checkable from this object alone (the engine never reaches into
+/// a repository). This is a deliberate, flagged extension of the CLAUDE.md §4
+/// field list.
 class GamificationState {
   const GamificationState({
     required this.userId,
@@ -18,6 +20,11 @@ class GamificationState {
     this.longestStreak = 0,
     this.lastActivityDate,
     this.unlockedBadgeIds = const <String>[],
+    this.transactionsLogged = 0,
+    this.budgetsCreated = 0,
+    this.budgetPeriodsWithinLimit = 0,
+    this.scannedTransactionsLogged = 0,
+    this.recentEventIds = const <String>[],
     this.syncStatus = SyncStatus.pending,
   });
 
@@ -31,10 +38,37 @@ class GamificationState {
   final int xp;
   final int coins;
   final int level;
+
+  /// Consecutive calendar days with at least one transaction logged. Resets to
+  /// 1 (not 0) after a missed day. Local calendar days (Phase 8 / CLAUDE.md §9).
   final int currentStreak;
+
+  /// High-water mark for [currentStreak]. **Never decreases.**
   final int longestStreak;
+
+  /// The calendar day (date-only) of the most recent day a transaction was
+  /// logged — the streak anchor. `null` until the first log.
   final DateTime? lastActivityDate;
+
   final List<String> unlockedBadgeIds;
+
+  /// Lifetime count of transactions logged (never decremented — "you logged
+  /// 100 transactions" stays true even after deletes). Drives the count badges.
+  final int transactionsLogged;
+
+  /// Lifetime count of budgets created.
+  final int budgetsCreated;
+
+  /// Lifetime count of budget periods that finished within their limit.
+  final int budgetPeriodsWithinLimit;
+
+  /// Lifetime count of transactions logged from a receipt scan.
+  final int scannedTransactionsLogged;
+
+  /// Bounded (most-recent-first, capped) list of processed gamification event
+  /// ids — the idempotency guard and the XP-reversal window. Small enough to
+  /// sync.
+  final List<String> recentEventIds;
 
   final DateTime updatedAt;
   final SyncStatus syncStatus;
@@ -47,6 +81,11 @@ class GamificationState {
     int? longestStreak,
     Patch<DateTime?>? lastActivityDate,
     List<String>? unlockedBadgeIds,
+    int? transactionsLogged,
+    int? budgetsCreated,
+    int? budgetPeriodsWithinLimit,
+    int? scannedTransactionsLogged,
+    List<String>? recentEventIds,
     DateTime? updatedAt,
     SyncStatus? syncStatus,
   }) {
@@ -59,6 +98,13 @@ class GamificationState {
       longestStreak: longestStreak ?? this.longestStreak,
       lastActivityDate: resolvePatch(lastActivityDate, this.lastActivityDate),
       unlockedBadgeIds: unlockedBadgeIds ?? this.unlockedBadgeIds,
+      transactionsLogged: transactionsLogged ?? this.transactionsLogged,
+      budgetsCreated: budgetsCreated ?? this.budgetsCreated,
+      budgetPeriodsWithinLimit:
+          budgetPeriodsWithinLimit ?? this.budgetPeriodsWithinLimit,
+      scannedTransactionsLogged:
+          scannedTransactionsLogged ?? this.scannedTransactionsLogged,
+      recentEventIds: recentEventIds ?? this.recentEventIds,
       updatedAt: updatedAt ?? this.updatedAt,
       syncStatus: syncStatus ?? this.syncStatus,
     );
@@ -80,6 +126,11 @@ class GamificationState {
       other.longestStreak == longestStreak &&
       other.lastActivityDate == lastActivityDate &&
       _listEquals(other.unlockedBadgeIds, unlockedBadgeIds) &&
+      other.transactionsLogged == transactionsLogged &&
+      other.budgetsCreated == budgetsCreated &&
+      other.budgetPeriodsWithinLimit == budgetPeriodsWithinLimit &&
+      other.scannedTransactionsLogged == scannedTransactionsLogged &&
+      _listEquals(other.recentEventIds, recentEventIds) &&
       other.updatedAt == updatedAt &&
       other.syncStatus == syncStatus;
 
@@ -93,6 +144,11 @@ class GamificationState {
     longestStreak,
     lastActivityDate,
     Object.hashAll(unlockedBadgeIds),
+    transactionsLogged,
+    budgetsCreated,
+    budgetPeriodsWithinLimit,
+    scannedTransactionsLogged,
+    Object.hashAll(recentEventIds),
     updatedAt,
     syncStatus,
   );
@@ -100,7 +156,8 @@ class GamificationState {
   @override
   String toString() =>
       'GamificationState($userId, xp=$xp, coins=$coins, lvl=$level, '
-      'streak=$currentStreak/$longestStreak, badges=${unlockedBadgeIds.length})';
+      'streak=$currentStreak/$longestStreak, badges=${unlockedBadgeIds.length}, '
+      'logged=$transactionsLogged)';
 }
 
 bool _listEquals(List<String> a, List<String> b) {
