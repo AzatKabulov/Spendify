@@ -3,6 +3,7 @@ import 'package:spendly/core/constants.dart';
 import 'package:spendly/data/repositories/hive_advice_record_repository.dart';
 import 'package:spendly/data/repositories/hive_gamification_state_repository.dart';
 import 'package:spendly/data/repositories/hive_period_aggregate_repository.dart';
+import 'package:spendly/domain/entities/advice_item.dart';
 import 'package:spendly/domain/entities/advice_record.dart';
 import 'package:spendly/domain/entities/enums.dart';
 import 'package:spendly/domain/entities/period_aggregate.dart';
@@ -66,7 +67,9 @@ void main() {
           userId: kLocalUserId,
           generatedAt: DateTime.utc(2026, 9, 1),
           summaryHash: 'hash-1',
-          adviceItems: const ['Spend less on Food'],
+          adviceItems: const [
+            AdviceItem(title: 'Food', body: 'Spend less on Food'),
+          ],
         ),
       );
       await repo.save(
@@ -75,12 +78,18 @@ void main() {
           userId: kLocalUserId,
           generatedAt: DateTime.utc(2026, 9, 5),
           summaryHash: 'hash-2',
-          adviceItems: const ['Nice work staying under budget'],
+          adviceItems: const [
+            AdviceItem(title: 'On track', body: 'Nice work staying under'),
+          ],
         ),
       );
 
       expect((await repo.getLatest())!.id, 'a2');
       expect((await repo.getBySummaryHash('hash-1'))!.id, 'a1');
+      expect(
+        (await repo.getBySummaryHash('hash-1'))!.adviceItems.single.body,
+        'Spend less on Food',
+      );
       expect(await repo.getBySummaryHash('nope'), isNull);
 
       await repo.clear();

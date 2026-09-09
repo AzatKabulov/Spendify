@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/transaction.dart';
+import '../providers/advice_providers.dart';
 import '../providers/budget_providers.dart';
 import '../providers/category_providers.dart';
 import '../providers/receipt_scan_providers.dart';
@@ -12,6 +13,7 @@ import '../widgets/empty_transactions_view.dart';
 import '../widgets/gamification_feedback_listener.dart';
 import '../widgets/sync_status_indicator.dart';
 import '../widgets/transaction_list_tile.dart';
+import 'advice_screen.dart';
 import 'budgets_screen.dart';
 import 'categories_screen.dart';
 import 'receipt_scan_screen.dart';
@@ -93,12 +95,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               onSelected: (choice) => _push(switch (choice) {
                 0 => const CategoriesScreen(),
                 1 => const StatsScreen(),
+                2 => const AdviceScreen(),
                 _ => const SettingsScreen(),
               }),
-              itemBuilder: (context) => const <PopupMenuEntry<int>>[
-                PopupMenuItem<int>(value: 0, child: Text('Categories')),
-                PopupMenuItem<int>(value: 1, child: Text('Rewards')),
-                PopupMenuItem<int>(value: 2, child: Text('Settings')),
+              itemBuilder: (context) => <PopupMenuEntry<int>>[
+                const PopupMenuItem<int>(value: 0, child: Text('Categories')),
+                const PopupMenuItem<int>(value: 1, child: Text('Rewards')),
+                if (ref.watch(adviceConfiguredProvider))
+                  const PopupMenuItem<int>(value: 2, child: Text('Insights')),
+                const PopupMenuItem<int>(value: 3, child: Text('Settings')),
               ],
             ),
           ],

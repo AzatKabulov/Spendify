@@ -48,6 +48,10 @@ dependencies:
   image_picker: ^1.2.3
   flutter_image_compress: ^2.5.1
   http: ^1.6.0
+  # Phase 9 — SHA-256 of the advice summary, to skip regenerating advice for
+  # unchanged data. A Dart-team utility package (like uuid/intl), not a stack
+  # choice; used only in data/repositories/advice_coordinator.dart.
+  crypto: ^3.0.6
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   # Pinned to 10.3.x: 11.0.0 forces compileSdk 37, which has no plain

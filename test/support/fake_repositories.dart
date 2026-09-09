@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:spendly/core/clock.dart';
 import 'package:spendly/data/repositories/default_categories.dart';
+import 'package:spendly/domain/entities/advice_item.dart';
+import 'package:spendly/domain/entities/advice_record.dart';
 import 'package:spendly/domain/entities/budget.dart';
 import 'package:spendly/domain/entities/category.dart';
 import 'package:spendly/domain/entities/enums.dart';
@@ -9,12 +11,15 @@ import 'package:spendly/domain/entities/gamification_state.dart';
 import 'package:spendly/domain/entities/period_aggregate.dart';
 import 'package:spendly/domain/entities/syncable.dart';
 import 'package:spendly/domain/entities/transaction.dart';
+import 'package:spendly/domain/repositories/advice_generator_repository.dart';
+import 'package:spendly/domain/repositories/advice_record_repository.dart';
 import 'package:spendly/domain/repositories/auth_repository.dart';
 import 'package:spendly/domain/repositories/budget_repository.dart';
 import 'package:spendly/domain/repositories/category_repository.dart';
 import 'package:spendly/domain/repositories/gamification_state_repository.dart';
 import 'package:spendly/domain/repositories/period_aggregate_repository.dart';
 import 'package:spendly/domain/repositories/transaction_repository.dart';
+import 'package:spendly/domain/services/advice_summary_builder.dart';
 import 'package:spendly/data/local/app_preferences.dart';
 
 /// In-memory synchronous stand-ins for the Hive repositories, for widget tests.
@@ -299,6 +304,64 @@ class FakeGamificationStateRepository implements GamificationStateRepository {
   Future<void> markSynced() async {
     final s = _state;
     if (s != null) _state = s.markSynced();
+  }
+}
+
+/// In-memory [AdviceRecordRepository] — the advice cache.
+class FakeAdviceRecordRepository implements AdviceRecordRepository {
+  final List<AdviceRecord> records = <AdviceRecord>[];
+
+  @override
+  Future<AdviceRecord?> getLatest() async => records.isEmpty
+      ? null
+      : records.reduce((a, b) => a.generatedAt.isAfter(b.generatedAt) ? a : b);
+
+  @override
+  Future<AdviceRecord?> getBySummaryHash(String summaryHash) async {
+    for (final r in records) {
+      if (r.summaryHash == summaryHash) return r;
+    }
+    return null;
+  }
+
+  @override
+  Future<AdviceRecord> save(AdviceRecord record) async {
+    records.add(record);
+    return record;
+  }
+
+  @override
+  Future<void> clear() async => records.clear();
+}
+
+/// Scriptable [AdviceGeneratorRepository] — no Gemini. Counts calls so tests
+/// can assert "identical data -> no API call".
+class FakeAdviceGenerator implements AdviceGeneratorRepository {
+  int calls = 0;
+  AdviceSummary? lastSummary;
+  AdviceGenerationException? failWith;
+  List<AdviceItem> next = const <AdviceItem>[
+    AdviceItem(
+      title: 'Ease off Food a little',
+      body:
+          'Food is your biggest category this month. Trying to keep it '
+          'nearer RM 250 would free up some room.',
+    ),
+    AdviceItem(
+      title: 'Nice work staying under on Transport',
+      body:
+          'You came in below your Transport budget — keep doing what you '
+          'are doing there.',
+    ),
+  ];
+
+  @override
+  Future<List<AdviceItem>> generate(AdviceSummary summary) async {
+    calls++;
+    lastSummary = summary;
+    final failure = failWith;
+    if (failure != null) throw failure;
+    return next;
   }
 }
 

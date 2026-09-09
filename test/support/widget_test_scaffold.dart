@@ -4,10 +4,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:spendly/core/constants.dart';
 import 'package:spendly/data/repositories/aggregation_maintenance.dart';
 import 'package:spendly/domain/entities/transaction.dart';
+import 'package:spendly/presentation/providers/advice_providers.dart';
 import 'package:spendly/presentation/providers/auth_providers.dart';
+import 'package:spendly/presentation/providers/receipt_scan_providers.dart';
 import 'package:spendly/presentation/providers/repository_providers.dart';
+import 'package:spendly/presentation/providers/sync_providers.dart';
 
 import 'fake_repositories.dart';
+import 'fake_sync.dart';
 
 /// The in-memory repositories a pumped test is running against.
 class TestRepos {
@@ -20,6 +24,9 @@ class TestRepos {
     required this.preferences,
     required this.maintenance,
     required this.gamification,
+    required this.adviceCache,
+    required this.adviceGenerator,
+    required this.connectivity,
   });
 
   /// The pumped app's `ProviderContainer`, for reading providers directly
@@ -32,6 +39,9 @@ class TestRepos {
   final FakeAppPreferences preferences;
   final AggregationMaintenance maintenance;
   final FakeGamificationStateRepository gamification;
+  final FakeAdviceRecordRepository adviceCache;
+  final FakeAdviceGenerator adviceGenerator;
+  final FakeConnectivityMonitor connectivity;
 
   /// Add a transaction the way `TransactionActions` does — persist it **and**
   /// update the aggregate cache (which the balance / budget providers read).
@@ -53,6 +63,8 @@ Future<TestRepos> pumpSpendly(
   WidgetTester tester, {
   required Widget home,
   DateTime? now,
+  String geminiApiKey = '',
+  bool online = true,
 }) async {
   final txnRepo = FakeTransactionRepository();
   final catRepo = FakeCategoryRepository();
@@ -63,6 +75,10 @@ Future<TestRepos> pumpSpendly(
     userId: kLocalUserId,
     clock: () => DateTime.utc(2026, 9, 8, 12),
   );
+  final adviceCache = FakeAdviceRecordRepository();
+  final adviceGenerator = FakeAdviceGenerator();
+  final connectivity = FakeConnectivityMonitor(startOnline: online);
+  addTearDown(connectivity.close);
   await catRepo.ensureDefaultsSeeded();
   final localNow = now ?? DateTime(2026, 9, 15, 10);
   final maintenance = AggregationMaintenance(
@@ -81,6 +97,10 @@ Future<TestRepos> pumpSpendly(
         periodAggregateRepositoryProvider.overrideWithValue(aggRepo),
         appPreferencesProvider.overrideWithValue(prefs),
         gamificationStateRepositoryProvider.overrideWithValue(gamificationRepo),
+        adviceRecordRepositoryProvider.overrideWithValue(adviceCache),
+        adviceGeneratorRepositoryProvider.overrideWithValue(adviceGenerator),
+        geminiApiKeyProvider.overrideWithValue(geminiApiKey),
+        connectivityMonitorProvider.overrideWithValue(connectivity),
         clockProvider.overrideWithValue(() => DateTime.utc(2026, 9, 8, 12)),
         localTimeProvider.overrideWithValue(() => localNow),
         idGeneratorProvider.overrideWithValue(() => 'id-${idSeq++}'),
@@ -103,5 +123,8 @@ Future<TestRepos> pumpSpendly(
     preferences: prefs,
     maintenance: maintenance,
     gamification: gamificationRepo,
+    adviceCache: adviceCache,
+    adviceGenerator: adviceGenerator,
+    connectivity: connectivity,
   );
 }

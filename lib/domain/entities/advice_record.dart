@@ -1,8 +1,10 @@
+import 'advice_item.dart';
+
 /// A cached set of AI advice items. **Not a [Syncable]** (CLAUDE.md §4): advice
 /// is regenerable from local data, so it is never pushed to Firestore and has
 /// no tombstone. [summaryHash] is the hash of the aggregate summary that was
-/// sent to Gemini — used in Phase 9 to skip regenerating advice for unchanged
-/// data.
+/// sent to Gemini — used to skip regenerating advice for unchanged data
+/// (Phase 9).
 class AdviceRecord {
   const AdviceRecord({
     required this.id,
@@ -16,12 +18,14 @@ class AdviceRecord {
   final String userId;
   final DateTime generatedAt;
   final String summaryHash;
-  final List<String> adviceItems;
+
+  /// Phase 9: was `List<String>`; now structured (see [AdviceItem]).
+  final List<AdviceItem> adviceItems;
 
   AdviceRecord copyWith({
     DateTime? generatedAt,
     String? summaryHash,
-    List<String>? adviceItems,
+    List<AdviceItem>? adviceItems,
   }) {
     return AdviceRecord(
       id: id,
@@ -55,7 +59,7 @@ class AdviceRecord {
       'AdviceRecord($id, ${adviceItems.length} items, hash=$summaryHash)';
 }
 
-bool _listEquals(List<String> a, List<String> b) {
+bool _listEquals(List<AdviceItem> a, List<AdviceItem> b) {
   if (a.length != b.length) return false;
   for (var i = 0; i < a.length; i++) {
     if (a[i] != b[i]) return false;

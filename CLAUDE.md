@@ -150,9 +150,13 @@ int iconCode;
 ```dart
 String id, userId;
 DateTime generatedAt;
-String summaryHash;           // hash of the aggregate summary sent to Gemini
-List<String> adviceItems;
+String summaryHash;           // SHA-256 of the aggregate summary sent to Gemini
+List<AdviceItem> adviceItems; // Phase 9: was List<String>; now {title, body} per item
 ```
+**Phase 9 deviation, flagged:** `adviceItems` became `List<AdviceItem>` (a
+`{title, body}` value type) — the Gemini contract returns titled items and a
+card list is better UX. **No Hive schema change:** the model still stores
+`List<String>`, each element a JSON object; the mapper bridges.
 
 ### PeriodAggregate (report cache — see §6 Performance)
 ```dart
@@ -272,6 +276,11 @@ Google Cloud API key restrictions (Android app + API restriction to
 Generative Language API) if staying with B, and record the outcome + rationale
 here. If moving to A, point `GeminiReceiptClient`'s `endpoint` at the function
 URL and pass an empty key.
+
+**Phase 9 (advice) shares the SAME single key path** — `geminiApiKeyProvider`
++ `kGeminiModel` + the same endpoint shape, via a sibling `GeminiAdviceClient`
+behind `AdviceGeneratorRepository`. There is one key, one config. Moving to
+option A points both clients' `endpoint` at the function URL.
 
 **Streak break rule (decided, Phase 8).** A fully missed local calendar day
 **breaks** the streak: the next log resets `currentStreak` to **1** (not 0 — the

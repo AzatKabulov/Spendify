@@ -11,6 +11,7 @@ library;
 import 'dart:convert';
 
 import '../entities/receipt_extraction.dart';
+import 'json_extraction.dart';
 
 /// Thrown only when [raw] contains no `{ … }` object we can even attempt to
 /// decode. The caller falls back to the blank manual form.
@@ -38,8 +39,8 @@ ReceiptExtraction parseReceiptJson(String raw) {
 Map<String, dynamic> _decodeLenient(String raw) {
   final candidates = <String>[
     raw.trim(),
-    _stripFences(raw),
-    _firstBraceObject(raw) ?? '',
+    stripCodeFences(raw),
+    firstBalanced(raw) ?? '',
   ];
   for (final c in candidates) {
     if (c.isEmpty) continue;
@@ -54,46 +55,6 @@ Map<String, dynamic> _decodeLenient(String raw) {
   throw ReceiptUnparseableException(
     raw.length > 200 ? '${raw.substring(0, 200)}…' : raw,
   );
-}
-
-String _stripFences(String raw) {
-  var s = raw.trim();
-  // ```json … ```  or  ``` … ```
-  final fence = RegExp(r'^```(?:json)?\s*|\s*```$', multiLine: true);
-  s = s.replaceAll(fence, '').trim();
-  return s;
-}
-
-/// The substring from the first `{` to its matching `}` (brace-balanced, aware
-/// of strings so a `}` inside a value doesn't end it early).
-String? _firstBraceObject(String raw) {
-  final start = raw.indexOf('{');
-  if (start < 0) return null;
-  var depth = 0;
-  var inString = false;
-  var escaped = false;
-  for (var i = start; i < raw.length; i++) {
-    final ch = raw[i];
-    if (inString) {
-      if (escaped) {
-        escaped = false;
-      } else if (ch == r'\') {
-        escaped = true;
-      } else if (ch == '"') {
-        inString = false;
-      }
-      continue;
-    }
-    if (ch == '"') {
-      inString = true;
-    } else if (ch == '{') {
-      depth++;
-    } else if (ch == '}') {
-      depth--;
-      if (depth == 0) return raw.substring(start, i + 1);
-    }
-  }
-  return null; // unbalanced / truncated
 }
 
 // --- per-field coercion (each independent) --------------------------
