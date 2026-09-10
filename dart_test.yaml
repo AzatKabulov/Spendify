@@ -1,0 +1,5 @@
+# Test tags. `perf` marks the on-VM algorithmic performance guard
+# (test/performance/) — kept in the default run because it is fast (~1 s), but
+# tagged so it can be isolated:  flutter test --tags perf
+tags:
+  perf:

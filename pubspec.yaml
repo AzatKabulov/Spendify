@@ -69,6 +69,13 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # Phase 11 — on-device performance + full-journey integration tests.
+  integration_test:
+    sdk: flutter
+
+  # Phase 12 — generate the launcher icon and native splash from one source PNG.
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.6
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
