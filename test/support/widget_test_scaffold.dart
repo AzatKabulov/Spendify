@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:spendly/core/constants.dart';
+import 'package:spendly/core/theme/app_theme.dart';
 import 'package:spendly/data/repositories/aggregation_maintenance.dart';
 import 'package:spendly/domain/entities/ai_consent.dart';
 import 'package:spendly/domain/entities/transaction.dart';
@@ -76,6 +77,10 @@ Future<TestRepos> pumpSpendly(
   /// When true, also overrides `sessionProvider` with a ready signed-in
   /// session — needed when [home] is `AuthGate` so it routes past sign-in.
   bool signedInSession = false,
+
+  /// System text scale to render at. 1.0 is normal; the accessibility pass
+  /// (Phase 12 Part C) pumps screens at 2.0 to check for overflow.
+  double textScale = 1.0,
 }) async {
   final txnRepo = FakeTransactionRepository();
   final catRepo = FakeCategoryRepository();
@@ -132,7 +137,18 @@ Future<TestRepos> pumpSpendly(
         if (signedInSession)
           sessionProvider.overrideWith(_ReadyLocalSession.new),
       ],
-      child: MaterialApp(home: home),
+      child: MaterialApp(
+        theme: AppTheme.light(),
+        home: home,
+        builder: textScale == 1.0
+            ? null
+            : (context, child) => MediaQuery(
+                data: MediaQuery.of(
+                  context,
+                ).copyWith(textScaler: TextScaler.linear(textScale)),
+                child: child!,
+              ),
+      ),
     ),
   );
   await tester.pumpAndSettle();

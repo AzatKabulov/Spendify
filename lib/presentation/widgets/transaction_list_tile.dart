@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/theme/app_theme.dart';
 import '../../core/utils/money.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/entities/enums.dart';
@@ -31,8 +32,8 @@ class TransactionListTile extends StatelessWidget {
     final theme = Theme.of(context);
     final isIncome = transaction.type == TransactionType.income;
     final amountColor = isIncome
-        ? const Color(0xFF2E7D32)
-        : theme.colorScheme.onSurface;
+        ? theme.colorScheme.income
+        : theme.colorScheme.expense;
     final note = transaction.note;
 
     return ListTile(

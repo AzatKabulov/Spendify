@@ -10,6 +10,7 @@ import '../providers/transaction_providers.dart';
 import '../widgets/balance_card.dart';
 import '../widgets/budget_warning_banner.dart';
 import '../widgets/empty_transactions_view.dart';
+import '../widgets/error_view.dart';
 import '../widgets/gamification_feedback_listener.dart';
 import '../widgets/sync_status_indicator.dart';
 import '../widgets/transaction_list_tile.dart';
@@ -144,7 +145,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Expanded(
               child: transactionsAsync.when(
                 loading: () => const SizedBox.shrink(),
-                error: (e, _) => Center(child: Text('Could not load: $e')),
+                error: (e, _) => ErrorView(
+                  message: "Couldn't load your transactions.",
+                  detail: e,
+                  onRetry: () => ref.invalidate(transactionsProvider),
+                ),
                 data: (all) {
                   final visible = all
                       .where((t) => !_hiddenIds.contains(t.id))

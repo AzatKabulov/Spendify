@@ -7,6 +7,7 @@ import '../../domain/entities/badge_catalogue.dart';
 import '../../domain/entities/gamification_state.dart';
 import '../../domain/services/gamification_rules.dart';
 import '../providers/gamification_providers.dart';
+import '../widgets/error_view.dart';
 
 /// "Rewards" — the persistent view of progress (level, coins, streak, badges).
 /// The immediate per-action feedback is the SnackBar from
@@ -22,7 +23,11 @@ class StatsScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Rewards')),
       body: stateAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Could not load rewards: $e')),
+        error: (e, _) => ErrorView(
+          message: "Couldn't load your rewards.",
+          detail: e,
+          onRetry: () => ref.invalidate(gamificationStateProvider),
+        ),
         data: (state) => ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
           children: <Widget>[

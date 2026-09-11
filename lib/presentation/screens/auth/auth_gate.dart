@@ -56,11 +56,13 @@ class _PreparingScreen extends StatelessWidget {
                   ? 'Restoring your data from backup…'
                   : 'Setting up your account…',
             ),
-            if (restoring) ...const <Widget>[
-              SizedBox(height: 8),
+            if (restoring) ...<Widget>[
+              const SizedBox(height: 8),
               Text(
                 'This can take a moment on a large history.',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ],

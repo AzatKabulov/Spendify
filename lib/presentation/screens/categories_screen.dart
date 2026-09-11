@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/category.dart';
 import '../providers/category_providers.dart';
 import '../widgets/category_avatar.dart';
+import '../widgets/error_view.dart';
 import 'category_form_screen.dart';
 
 /// List / create / edit / delete categories.
@@ -68,7 +69,11 @@ class CategoriesScreen extends ConsumerWidget {
       ),
       body: categoriesAsync.when(
         loading: () => const SizedBox.shrink(),
-        error: (e, _) => Center(child: Text('Could not load: $e')),
+        error: (e, _) => ErrorView(
+          message: "Couldn't load your categories.",
+          detail: e,
+          onRetry: () => ref.invalidate(categoriesProvider),
+        ),
         data: (categories) => ListView.builder(
           padding: const EdgeInsets.only(bottom: 96),
           itemCount: categories.length,

@@ -30,21 +30,30 @@ class CategoryPie extends StatelessWidget {
           centerSpaceRadius: 48,
           sections: <PieChartSectionData>[
             for (final slice in slices)
-              PieChartSectionData(
-                value: slice.expenseMinor.toDouble(),
-                color: Color(
+              () {
+                final sliceColor = Color(
                   categoriesById[slice.categoryId]?.colorValue ??
                       kFallbackCategoryColor,
-                ),
-                radius: 44,
-                showTitle: slice.fractionOfExpense >= 0.08,
-                title: '${(slice.fractionOfExpense * 100).round()}%',
-                titleStyle: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
+                );
+                return PieChartSectionData(
+                  value: slice.expenseMinor.toDouble(),
+                  color: sliceColor,
+                  radius: 44,
+                  showTitle: slice.fractionOfExpense >= 0.08,
+                  title: '${(slice.fractionOfExpense * 100).round()}%',
+                  titleStyle: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    // Pick the label colour that reads on this swatch, so the
+                    // lighter palette entries (amber, lime) stay legible.
+                    color:
+                        ThemeData.estimateBrightnessForColor(sliceColor) ==
+                            Brightness.dark
+                        ? Colors.white
+                        : Colors.black87,
+                  ),
+                );
+              }(),
           ],
         ),
       ),

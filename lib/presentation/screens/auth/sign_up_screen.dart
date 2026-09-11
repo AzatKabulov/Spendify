@@ -88,8 +88,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                         onPressed: _submit,
                       ),
                       const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: <Widget>[
                           const Text('Already have an account?'),
                           TextButton(

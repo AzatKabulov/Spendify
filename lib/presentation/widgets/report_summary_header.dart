@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_theme.dart';
 import '../../core/utils/money.dart';
 
 /// Income / expense / net for the viewed report period.
@@ -32,13 +33,13 @@ class ReportSummaryHeader extends StatelessWidget {
                   context,
                   'Income',
                   formatMinor(incomeMinor),
-                  const Color(0xFF2E7D32),
+                  theme.colorScheme.income,
                 ),
                 _cell(
                   context,
                   'Expenses',
                   formatMinor(expenseMinor),
-                  theme.colorScheme.onSurface,
+                  theme.colorScheme.expense,
                 ),
               ],
             ),
@@ -52,7 +53,7 @@ class ReportSummaryHeader extends StatelessWidget {
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: net >= 0
-                        ? const Color(0xFF2E7D32)
+                        ? theme.colorScheme.income
                         : theme.colorScheme.error,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),

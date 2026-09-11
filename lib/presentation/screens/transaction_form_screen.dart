@@ -12,6 +12,7 @@ import '../providers/receipt_scan_providers.dart';
 import '../providers/repository_providers.dart';
 import '../providers/transaction_providers.dart';
 import '../widgets/category_avatar.dart';
+import '../widgets/error_view.dart';
 
 /// Add (when [existing] is null) or edit a transaction. One widget for both,
 /// so the two flows never drift apart.
@@ -150,7 +151,11 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
       body: SafeArea(
         child: categoriesAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Could not load categories: $e')),
+          error: (e, _) => ErrorView(
+            message: "Couldn't load your categories.",
+            detail: e,
+            onRetry: () => ref.invalidate(categoriesProvider),
+          ),
           data: (categories) => _form(context, categories),
         ),
       ),

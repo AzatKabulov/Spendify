@@ -310,16 +310,31 @@ confirmation dialog says so explicitly ("sign in again to restore it"). The
 device encryption key is left in place (empty boxes protect nothing; regenerating
 risks a messy first launch). Recoverable by signing back in. `HiveLocalDataWiper`.
 
+**Release signing (decided, Phase 12).** A self-signed keystore
+(`android/app/spendly-release.jks`, alias `spendly`) + `android/key.properties`
+were generated on the build machine — both gitignored, never tracked. Full
+detail, the signing certificate's SHA-1/SHA-256 (needed for the Gemini key
+restriction above), and the recovery procedure if they're lost: `docs/RELEASE.md`.
+`android/app/build.gradle.kts` falls back to debug signing when
+`key.properties` is absent, so a fresh clone still builds.
+
+**Dark mode (decided, Phase 12).** Locked to light only — `AppTheme.light()`
+is the only `ThemeData` `MaterialApp` is given (no `darkTheme`), so the app
+renders in light mode regardless of the system setting. A from-scratch dark
+palette was judged not "genuinely quick" within Phase 12's scope; recorded as
+future work rather than shipped half-finished. `lib/core/theme/app_theme.dart`.
+
 ---
 
 ## 10. Common commands
 
 ```bash
 flutter run                                              # run on emulator/device
+flutter run --dart-define=DEMO_SEED=true                 # run with the seeded demo dataset (docs/DEMO_SCRIPT.md)
 flutter analyze                                          # static analysis — keep clean
 flutter test                                             # unit + widget tests
 dart run build_runner build --delete-conflicting-outputs # Hive adapters, codegen
-flutter build apk --release                              # release build
+flutter clean && flutter build apk --release              # release build — `clean` first; see docs/RELEASE.md §4
 ```
 
 ---

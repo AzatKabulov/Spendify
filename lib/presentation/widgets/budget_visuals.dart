@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_theme.dart';
 import '../../domain/services/budget_evaluator.dart';
 
 /// Colour + icon + short label for a [BudgetLevel]. Colour is never the only
@@ -12,12 +13,12 @@ import '../../domain/services/budget_evaluator.dart';
   final scheme = Theme.of(context).colorScheme;
   return switch (level) {
     BudgetLevel.safe => (
-      color: const Color(0xFF2E7D32),
+      color: scheme.income,
       icon: Icons.check_circle_outline,
       label: 'On track',
     ),
     BudgetLevel.approaching => (
-      color: const Color(0xFFEF6C00),
+      color: scheme.warning,
       icon: Icons.warning_amber_rounded,
       label: 'Approaching limit',
     ),

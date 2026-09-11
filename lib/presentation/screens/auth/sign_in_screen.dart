@@ -97,8 +97,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                         onPressed: firebaseReady ? _submit : null,
                       ),
                       const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: <Widget>[
                           const Text("New here?"),
                           TextButton(

@@ -50,7 +50,11 @@ class DataSentScreen extends ConsumerWidget {
                 child: CircularProgressIndicator(),
               ),
             ),
-            error: (e, _) => Text('Could not build the preview: $e'),
+            error: (e, _) => Text(
+              'Could not build the preview right now. Reopen this screen to '
+              'try again.',
+              style: theme.textTheme.bodyMedium,
+            ),
             data: (summary) {
               final pretty = const JsonEncoder.withIndent(
                 '  ',

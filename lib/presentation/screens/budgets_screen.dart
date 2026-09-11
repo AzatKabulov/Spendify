@@ -7,6 +7,7 @@ import '../../domain/services/budget_evaluator.dart';
 import '../providers/budget_providers.dart';
 import '../providers/category_providers.dart';
 import '../widgets/budget_visuals.dart';
+import '../widgets/error_view.dart';
 import 'budget_form_screen.dart';
 
 /// List / create / edit / delete budgets, each with live spend for its period.
@@ -43,7 +44,11 @@ class BudgetsScreen extends ConsumerWidget {
       ),
       body: budgetsAsync.when(
         loading: () => const SizedBox.shrink(),
-        error: (e, _) => Center(child: Text('Could not load: $e')),
+        error: (e, _) => ErrorView(
+          message: "Couldn't load your budgets.",
+          detail: e,
+          onRetry: () => ref.invalidate(budgetsProvider),
+        ),
         data: (budgets) {
           if (budgets.isEmpty) {
             return const _NoBudgets();

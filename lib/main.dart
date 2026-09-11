@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/constants.dart';
+import 'core/dev/demo_seed.dart';
+import 'core/theme/app_theme.dart';
 import 'data/local/auth_session_store.dart';
 import 'data/local/hive_initializer.dart';
 import 'data/remote/firebase_bootstrap.dart';
@@ -32,7 +35,15 @@ Future<void> main() async {
 
   final HiveStore store = await bootstrapHive();
   final FirebaseBootstrapResult firebase = await initializeFirebase();
-  final AuthSession? session = await SecureStorageAuthSessionStore().read();
+  AuthSession? session = await SecureStorageAuthSessionStore().read();
+
+  // Debug-only demo dataset (Phase 12). Loads a realistic history when
+  // `--dart-define=DEMO_SEED=true` is passed; if there is no real session it
+  // also runs the app as a local demo user, so `AuthGate` opens straight on the
+  // home screen without Firebase. Inert (and tree-shaken) otherwise.
+  if (await maybeDemoSeed(store)) {
+    session ??= const AuthSession(uid: kLocalUserId, email: 'demo@spendly.app');
+  }
 
   final container = ProviderContainer(
     overrides: [
@@ -118,10 +129,7 @@ class _SpendlyAppState extends ConsumerState<SpendlyApp>
     return MaterialApp(
       title: 'Spendly',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2E7D32)),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light(),
       home: const AuthGate(),
     );
   }
