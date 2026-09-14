@@ -55,15 +55,12 @@ Prerequisite: Firestore database created, `firestore.rules` published (done
 - [ ] **Kill mid-sync**: add several transactions at once while online, then
       immediately force-close the app before the sync icon settles. Reopen →
       nothing lost, nothing duplicated.
-- [ ] **Cross-user rules probe** (lower priority — proves the *deployed*
-      rules, not just the local file): create a second test account. Sign in
-      as it, note that you cannot see the first account's data anywhere in
-      the app (expected — the app only ever queries its own uid's subtree).
-      For a stronger check: in the Firebase console, open Firestore data,
-      copy a document path under the first account's `users/{uid}/...`, then
-      use the console's **Rules Playground** (Firestore → Rules → the
-      "Rules playground" tool) simulating a **get** request as the *second*
-      user's uid against that path → must show **Denied**.
+- [x] **Cross-user rules probe** — **done 2026-09-14**, automated. Ran
+      `dart run scripts/firestore_rules_probe.dart` twice against the real
+      project: two temporary accounts, one attempts to read/overwrite/
+      payload-spoof the other's Firestore data. All rejected both runs; both
+      temporary accounts confirmed deleted afterward. Full result in
+      `docs/SECURITY_AUDIT.md`. Re-run any time you change `firestore.rules`.
 
 ---
 

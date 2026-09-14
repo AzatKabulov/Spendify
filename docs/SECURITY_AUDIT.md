@@ -21,6 +21,7 @@ items, addressed or consciously deferred with rationale below.
 | 4 | LOW | No certificate pinning (system CA trust only) | **Not changed** — see rationale below. |
 | 5 | LOW | `flutter_secure_storage` pinned to `10.3.1`, not latest `11.x` | **Not changed** — see rationale below. |
 | 6 | INFO | `firebase_options.dart`'s `apiKey` field looks like a secret in a naive grep | **No action needed** — confirmed this is Google's public client-config value, not a secret; documented here so it isn't re-flagged by a future, less careful pass. |
+| — | (audit caveat, not a finding) | Firestore rules were *written* correctly but never *live-verified* against the real deployed project | **Live-verified, 2026-09-14** — see below. Two independent runs of `scripts/firestore_rules_probe.dart` against the real project both confirm cross-user reads, overwrites, and payload-spoofing are all rejected. |
 | — | P2 (hardening, not a finding) | `domain/`'s "no imports from `data/` or any framework package" rule was only enforced by review discipline | **Added** — `test/architecture/layer_boundary_test.dart` scans every file under `lib/domain/` and fails the build if that invariant is ever violated. Currently 0 violations (confirmed before writing the test). |
 
 ---
@@ -50,6 +51,36 @@ platform package situation resolves upstream.
 
 ---
 
+## Live cross-user Firestore rules probe — DONE, 2026-09-14
+
+The one item that needed live verification against the real deployed
+project (not just a correctly-*written* rules file) is now closed.
+`scripts/firestore_rules_probe.dart` — a standalone, on-demand Dart script,
+not part of `flutter test` — created two temporary test accounts on the real
+`spendify-2e8f9` project, had one attempt to read, overwrite, and
+payload-spoof into the other's Firestore subtree, and deleted both accounts
+afterward. Run twice for confidence in the cleanup path; both runs passed
+identically:
+
+```
+PASS  A can write her own document
+PASS  A can read her own document
+PASS  B is REJECTED reading A's document
+PASS  B is REJECTED overwriting A's document
+PASS  B is REJECTED claiming a payload owned by A, even under B's own path
+```
+
+Both temporary accounts were confirmed deleted (`HTTP 200` on the delete
+call) after each run. Two harmless residues remain: two soft-deleted test
+transaction documents under now-deleted (orphaned) uids — inert, since no
+one can authenticate as those uids anymore and the rules require
+`request.auth.uid` to match the path; consistent with the app's own
+tombstone model, not a cleanup gap. Re-run any time with:
+
+```
+dart run scripts/firestore_rules_probe.dart
+```
+
 ## What still needs you (not fixable from here)
 
 1. **Apply the Google Cloud API key restriction** (Finding #1's actual
@@ -59,12 +90,9 @@ platform package situation resolves upstream.
    `16:2D:B7:A3:51:7E:32:4C:F9:DC:80:C7:25:58:3A:69:1E:43:2C:A9`) **and**
    API restriction to **Generative Language API** only. This is the one
    action that meaningfully bounds the impact of Finding #1 even if a keyed
-   APK's key is ever extracted.
-2. **The live cross-user Firestore rules probe** (from the original audit's
-   §9 caveat: rules that are *written* correctly and rules that are
-   *confirmed* correct once deployed are different claims) — still open,
-   tracked in `docs/MANUAL_TEST_CHECKLIST.md`. Ask if you'd like this
-   automated against your real project rather than done by hand.
+   APK's key is ever extracted. This is the only item from the original
+   audit that still needs you — everything else is either fixed or
+   live-verified above.
 
 ---
 
