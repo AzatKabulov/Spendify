@@ -318,6 +318,17 @@ restriction above), and the recovery procedure if they're lost: `docs/RELEASE.md
 `android/app/build.gradle.kts` falls back to debug signing when
 `key.properties` is absent, so a fresh clone still builds.
 
+**Security audit + remediation (Phase 12).** A full read-only audit found one
+already-known HIGH item (the Gemini key extractability above — disclosure,
+not a surprise) and two MEDIUM items, both fixed same day: the repository
+layer's `delete`/`restore`/`upsertFromRemote` now re-check record ownership
+the way every read already did, and the Gemini key moved from a URL query
+parameter to the `x-goog-api-key` header in both Gemini clients. A new test
+(`test/architecture/layer_boundary_test.dart`) now enforces the "`domain/`
+imports nothing from `data/`" rule instead of relying on review discipline
+alone. Full report + rationale for what was *not* changed (cert pinning,
+`flutter_secure_storage` version): `docs/SECURITY_AUDIT.md`.
+
 **Dark mode (decided, Phase 12).** Locked to light only — `AppTheme.light()`
 is the only `ThemeData` `MaterialApp` is given (no `darkTheme`), so the app
 renders in light mode regardless of the system setting. A from-scratch dark

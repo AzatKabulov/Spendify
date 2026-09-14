@@ -78,10 +78,28 @@ GeminiAdviceClient _client(MockClient mock, {String apiKey = 'test-key'}) =>
     GeminiAdviceClient(
       apiKey: apiKey,
       httpClient: mock,
-      endpoint: (m, k) => Uri.parse('https://example.test/$m'),
+      endpoint: (m) => Uri.parse('https://example.test/$m'),
     );
 
 void main() {
+  test(
+    'sends the API key as a header, never in the URL (security review)',
+    () async {
+      final client = _client(
+        MockClient((req) async {
+          expect(req.headers['x-goog-api-key'], 'test-key');
+          expect(req.url.queryParameters.containsKey('key'), isFalse);
+          expect(req.url.toString().contains('test-key'), isFalse);
+          return http.Response(
+            _geminiResponse('{"advice":[{"title":"t","body":"b"}]}'),
+            200,
+          );
+        }),
+      );
+      await client.generate(_summary());
+    },
+  );
+
   test('no API key -> AdviceUnavailableException, no HTTP call', () async {
     var called = false;
     final client = _client(

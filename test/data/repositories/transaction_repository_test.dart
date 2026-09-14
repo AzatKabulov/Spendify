@@ -148,4 +148,87 @@ void main() {
 
     expect((await next).map((t) => t.id), containsAll(<String>['x', 'y']));
   });
+
+  group('cross-user isolation (security review, Phase 12)', () {
+    // A second repository over the SAME Hive box, scoped to a different
+    // userId — simulating a record that ended up in this box but is owned
+    // by someone else (a userId-migration remnant, or a future
+    // multi-account scenario). Every id-based mutation must treat it as if
+    // it doesn't exist, exactly like `getById` already does.
+    late HiveTransactionRepository otherUserRepo;
+
+    setUp(() {
+      otherUserRepo = HiveTransactionRepository(
+        harness.store.transactions,
+        userId: 'someone-else',
+        clock: () => fakeNow,
+      );
+    });
+
+    test('delete leaves a foreign-owned record untouched', () async {
+      await repo.add(sample(id: 'mine'));
+
+      await otherUserRepo.delete('mine');
+
+      // Not soft-deleted, not touched at all — the attempt was a no-op.
+      final stillMine = await repo.getById('mine');
+      expect(stillMine, isNotNull);
+      expect(stillMine!.isDeleted, isFalse);
+    });
+
+    test('restore cannot resurrect a foreign-owned tombstone', () async {
+      await repo.add(sample(id: 'mine'));
+      await repo.delete('mine');
+
+      await otherUserRepo.restore('mine');
+
+      expect((await repo.getByIdIncludingDeleted('mine'))!.isDeleted, isTrue);
+    });
+
+    test('markSynced cannot flip a foreign-owned record to synced', () async {
+      await repo.add(sample(id: 'mine')); // starts pending
+
+      await otherUserRepo.markSynced('mine');
+
+      expect((await repo.getById('mine'))!.syncStatus, SyncStatus.pending);
+    });
+
+    test('getByIdIncludingDeleted is invisible to a different user', () async {
+      await repo.add(sample(id: 'mine'));
+
+      expect(await otherUserRepo.getByIdIncludingDeleted('mine'), isNull);
+    });
+
+    test('upsertFromRemote refuses a document owned by another user', () async {
+      final foreign = Transaction(
+        id: 'not-mine',
+        userId: 'someone-else',
+        amountMinor: 500,
+        type: TransactionType.expense,
+        categoryId: 'cat-food',
+        date: DateTime.utc(2026, 9, 1),
+        source: TransactionSource.manual,
+        createdAt: DateTime.utc(2026, 9, 1),
+        updatedAt: DateTime.utc(2026, 9, 1),
+        syncStatus: SyncStatus.synced,
+      );
+
+      await repo.upsertFromRemote(foreign);
+
+      // Never written into this user's view of the box at all.
+      expect(await repo.getById('not-mine'), isNull);
+      expect(await repo.getByIdIncludingDeleted('not-mine'), isNull);
+    });
+
+    test(
+      'upsertFromRemote still applies a document owned by this user',
+      () async {
+        final mine = sample(id: 'mine');
+
+        await repo.upsertFromRemote(mine);
+
+        expect(await repo.getById('mine'), isNotNull);
+      },
+    );
+  });
 }

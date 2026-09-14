@@ -23,7 +23,7 @@ class GeminiAdviceClient implements AdviceGeneratorRepository {
     http.Client? httpClient,
     String model = 'gemini-2.0-flash',
     Duration timeout = const Duration(seconds: 30),
-    Uri Function(String model, String apiKey)? endpoint,
+    Uri Function(String model)? endpoint,
   }) : _key = apiKey,
        _http = httpClient ?? http.Client(),
        _modelId = model,
@@ -34,11 +34,14 @@ class GeminiAdviceClient implements AdviceGeneratorRepository {
   final http.Client _http;
   final String _modelId;
   final Duration _requestTimeout;
-  final Uri Function(String model, String apiKey) _endpoint;
+  final Uri Function(String model) _endpoint;
 
-  static Uri _defaultEndpoint(String model, String apiKey) => Uri.parse(
+  // Security review (Phase 12): the key travels in the `x-goog-api-key`
+  // header (below), never in the URL — see the matching note in
+  // `gemini_client.dart`, this client's sibling.
+  static Uri _defaultEndpoint(String model) => Uri.parse(
     'https://generativelanguage.googleapis.com/v1beta/models/'
-    '$model:generateContent?key=$apiKey',
+    '$model:generateContent',
   );
 
   static const String _prompt = '''
@@ -96,8 +99,11 @@ SUMMARY:
     try {
       response = await _http
           .post(
-            _endpoint(_modelId, _key),
-            headers: const <String, String>{'Content-Type': 'application/json'},
+            _endpoint(_modelId),
+            headers: <String, String>{
+              'Content-Type': 'application/json',
+              'x-goog-api-key': _key,
+            },
             body: requestBody,
           )
           .timeout(_requestTimeout);

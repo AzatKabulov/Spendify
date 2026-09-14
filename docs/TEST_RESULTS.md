@@ -17,7 +17,7 @@ the current run). Re-run any section with the commands shown._
 |---|---|---|---|---|
 | 1 | **Performance** — core actions | < 2 s on a mid-range Android device | All 6 core actions: median 201–768 ms, **worst single sample 226–1 798 ms — every action now passes on both median and worst-case**, re-run on 2026-09-13 (a 2026-09-11 run had one cold-start sample at 2 022 ms; that did not reproduce). Algorithmic cost of every screen's data layer: < 7 ms with 5 000 transactions. | **PASS** — see §3 |
 | 2 | **Reliability** — offline | All core functions work with zero connectivity, except the two AI features | 14/14 capabilities pass with connectivity forced off; receipt scanning, advice regeneration and sync all degrade with a message, no crash. | **PASS** |
-| 3 | **Security** — encryption / HTTPS / no plaintext creds | Local data encrypted at rest; HTTPS only; no plaintext credentials (OWASP MASVS baseline) | Full audit in Phase 10 (`docs/` / commit `ee8eb4b`): all 7 Hive boxes AES-encrypted, key in Android Keystore only; `usesCleartextTraffic=false` + network-security-config; no password persisted; no key in tracked source or the keyless APK. | **PASS** (1 documented limitation: a *keyed* release APK embeds the Gemini key — `CLAUDE.md §9`) |
+| 3 | **Security** — encryption / HTTPS / no plaintext creds | Local data encrypted at rest; HTTPS only; no plaintext credentials (OWASP MASVS baseline) | Full audit in Phase 10 (`docs/` / commit `ee8eb4b`), extended by a second full read-only audit in Phase 12 — **[docs/SECURITY_AUDIT.md](SECURITY_AUDIT.md)**: all 7 Hive boxes AES-encrypted, key in Android Keystore only; `usesCleartextTraffic=false` + network-security-config; no password persisted; no key in tracked source or the keyless APK; repository-layer ownership check gap and Gemini-key-in-URL both found and fixed same day, with tests proving each fix. | **PASS** (1 documented limitation carried forward: a *keyed* release APK embeds the Gemini key — `CLAUDE.md §9`; mitigation is a Google Cloud key restriction, still open) |
 | 4 | **Usability** — first transaction | First-time user saves their first transaction in < 60 s, no instructions | **Not yet measured** — needs 3–5 real participants. Protocol, results sheet and SUS questionnaire are ready in `docs/USABILITY_TEST_PROTOCOL.md`. | **PENDING** (materials ready) |
 | 5 | **Scalability** — multi-year history | Stays responsive with multi-year history | 5 000 transactions / 3 years / 15 categories seeded. Report, budget and balance computations are O(aggregates) not O(transactions): 0.3–10 ms each. Aggregate cache is ~8 300 rows and loads from encrypted Hive in ~5 ms. | **PASS** |
 | 6 | **Maintainability** — replaceable layers | AI, storage and gamification each behind an interface | `GeminiReceiptClient`/`GeminiAdviceClient` behind `ReceiptScannerRepository`/`AdviceGeneratorRepository`; `UnavailableReceiptScanner`/`UnavailableAdviceGenerator` are drop-in replacements already used when AI is off. Storage behind `*Repository` interfaces with in-memory fakes used by 40+ widget tests. `GamificationEngine` is pure, no Hive/Firebase/Flutter imports. `domain/` has zero `data/` imports (enforced by review). | **PASS** |
@@ -32,8 +32,8 @@ flutter test --coverage
 
 | Metric | Value |
 |---|---|
-| Test files | 53 (`test/`) + 1 (`integration_test/`) |
-| Test cases | 387 unit + widget passing, 1 skipped (demo-seed test, gated on `--dart-define=DEMO_SEED=true`) |
+| Test files | 54 (`test/`) + 1 (`integration_test/`) |
+| Test cases | 396 unit + widget passing, 1 skipped (demo-seed test, gated on `--dart-define=DEMO_SEED=true`) |
 | Line coverage (overall) | **72.4 %** (3 888 / 5 369) |
 | `domain/services` (the pure logic the report commits to unit-testing) | **93.7 %** (613 / 654) — unchanged since Phase 11 |
 | `presentation/widgets` | 88.0 % |

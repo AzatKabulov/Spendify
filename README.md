@@ -154,6 +154,7 @@ Regenerating the keystore: see [docs/RELEASE.md](docs/RELEASE.md).
 | [SPENDLY_BUILD_PLAN.md](SPENDLY_BUILD_PLAN.md) | phase-by-phase build plan |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | layers, components, data flow, diagram |
 | [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md) | NFR evidence pack (CP2 §3.2.2) |
+| [docs/SECURITY_AUDIT.md](docs/SECURITY_AUDIT.md) | full security/architecture audit + fixes applied |
 | [docs/MANUAL_TEST_CHECKLIST.md](docs/MANUAL_TEST_CHECKLIST.md) | everything left that needs a live service, a device, or a person |
 | [docs/USABILITY_TEST_PROTOCOL.md](docs/USABILITY_TEST_PROTOCOL.md) | 60-second first-transaction test — run with real participants |
 | [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) | live demo run sheet |

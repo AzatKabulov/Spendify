@@ -27,10 +27,25 @@ GeminiReceiptClient _client(MockClient mock, {String apiKey = 'test-key'}) =>
     GeminiReceiptClient(
       apiKey: apiKey,
       httpClient: mock,
-      endpoint: (m, k) => Uri.parse('https://example.test/$m'),
+      endpoint: (m) => Uri.parse('https://example.test/$m'),
     );
 
 void main() {
+  test(
+    'sends the API key as a header, never in the URL (security review)',
+    () async {
+      final client = _client(
+        MockClient((req) async {
+          expect(req.headers['x-goog-api-key'], 'test-key');
+          expect(req.url.queryParameters.containsKey('key'), isFalse);
+          expect(req.url.toString().contains('test-key'), isFalse);
+          return http.Response(_geminiResponse('{}'), 200);
+        }),
+      );
+      await client.extract(_bytes);
+    },
+  );
+
   test(
     'no API key -> ReceiptScannerUnavailableException, no HTTP call',
     () async {
