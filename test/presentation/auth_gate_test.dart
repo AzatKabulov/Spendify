@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/presentation/providers/auth_providers.dart';
-import 'package:spendly/presentation/screens/auth/auth_gate.dart';
-import 'package:spendly/presentation/screens/auth/sign_in_screen.dart';
+import 'package:spendify/presentation/providers/auth_providers.dart';
+import 'package:spendify/presentation/screens/auth/auth_gate.dart';
+import 'package:spendify/presentation/screens/auth/sign_in_screen.dart';
 
 void main() {
   testWidgets('with no persisted session, routes to the sign-in screen', (

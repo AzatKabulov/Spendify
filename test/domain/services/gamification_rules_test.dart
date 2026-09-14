@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/domain/services/gamification_rules.dart';
+import 'package:spendify/domain/services/gamification_rules.dart';
 
 void main() {
   group('level curve', () {

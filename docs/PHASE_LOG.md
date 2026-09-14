@@ -1,6 +1,6 @@
-# Spendly — Phase log
+# Spendify — Phase log
 
-What shipped in each phase of `SPENDLY_BUILD_PLAN.md`, and the commit it
+What shipped in each phase of `SPENDIFY_BUILD_PLAN.md`, and the commit it
 landed in. Design decisions that deviated from the original brief are flagged
 — full rationale for each lives in `CLAUDE.md §9`.
 

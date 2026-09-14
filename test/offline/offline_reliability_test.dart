@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/core/constants.dart';
-import 'package:spendly/domain/entities/advice_item.dart';
-import 'package:spendly/domain/entities/advice_record.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/domain/entities/transaction.dart';
-import 'package:spendly/presentation/providers/advice_providers.dart';
-import 'package:spendly/presentation/providers/budget_providers.dart';
-import 'package:spendly/presentation/providers/gamification_providers.dart';
-import 'package:spendly/presentation/providers/repository_providers.dart';
-import 'package:spendly/presentation/providers/sync_providers.dart';
-import 'package:spendly/presentation/providers/transaction_providers.dart';
-import 'package:spendly/presentation/screens/advice_screen.dart';
-import 'package:spendly/presentation/screens/budgets_screen.dart';
-import 'package:spendly/presentation/screens/categories_screen.dart';
-import 'package:spendly/presentation/screens/home_screen.dart';
-import 'package:spendly/presentation/screens/receipt_scan_screen.dart';
-import 'package:spendly/presentation/screens/reports_screen.dart';
-import 'package:spendly/presentation/screens/stats_screen.dart';
-import 'package:spendly/presentation/screens/transaction_form_screen.dart';
+import 'package:spendify/core/constants.dart';
+import 'package:spendify/domain/entities/advice_item.dart';
+import 'package:spendify/domain/entities/advice_record.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/domain/entities/transaction.dart';
+import 'package:spendify/presentation/providers/advice_providers.dart';
+import 'package:spendify/presentation/providers/budget_providers.dart';
+import 'package:spendify/presentation/providers/gamification_providers.dart';
+import 'package:spendify/presentation/providers/repository_providers.dart';
+import 'package:spendify/presentation/providers/sync_providers.dart';
+import 'package:spendify/presentation/providers/transaction_providers.dart';
+import 'package:spendify/presentation/screens/advice_screen.dart';
+import 'package:spendify/presentation/screens/budgets_screen.dart';
+import 'package:spendify/presentation/screens/categories_screen.dart';
+import 'package:spendify/presentation/screens/home_screen.dart';
+import 'package:spendify/presentation/screens/receipt_scan_screen.dart';
+import 'package:spendify/presentation/screens/reports_screen.dart';
+import 'package:spendify/presentation/screens/stats_screen.dart';
+import 'package:spendify/presentation/screens/transaction_form_screen.dart';
 
 import '../support/widget_test_scaffold.dart';
 
@@ -59,7 +59,7 @@ void main() {
 
   group('core features work fully offline', () {
     testWidgets('add a transaction', (tester) async {
-      final repos = await pumpSpendly(
+      final repos = await pumpSpendify(
         tester,
         home: const _Host(TransactionFormScreen()),
         online: false,
@@ -78,7 +78,7 @@ void main() {
     });
 
     testWidgets('edit + delete a transaction', (tester) async {
-      final repos = await pumpSpendly(
+      final repos = await pumpSpendify(
         tester,
         home: const HomeScreen(),
         online: false,
@@ -107,7 +107,7 @@ void main() {
     });
 
     testWidgets('create a custom category', (tester) async {
-      final repos = await pumpSpendly(
+      final repos = await pumpSpendify(
         tester,
         home: const CategoriesScreen(),
         online: false,
@@ -127,7 +127,7 @@ void main() {
     testWidgets('create a budget through the form + warning evaluates', (
       tester,
     ) async {
-      final repos = await pumpSpendly(
+      final repos = await pumpSpendify(
         tester,
         home: const _Host(BudgetsScreen()),
         online: false,
@@ -157,7 +157,7 @@ void main() {
     });
 
     testWidgets('all reports render from cache', (tester) async {
-      final repos = await pumpSpendly(
+      final repos = await pumpSpendify(
         tester,
         home: const ReportsScreen(),
         online: false,
@@ -177,7 +177,7 @@ void main() {
     });
 
     testWidgets('gamification awards fire offline', (tester) async {
-      final repos = await pumpSpendly(
+      final repos = await pumpSpendify(
         tester,
         home: const _Host(TransactionFormScreen()),
         online: false,
@@ -200,7 +200,7 @@ void main() {
     });
 
     testWidgets('stats / rewards screen renders offline', (tester) async {
-      await pumpSpendly(tester, home: const StatsScreen(), online: false);
+      await pumpSpendify(tester, home: const StatsScreen(), online: false);
       expect(find.text('Level 1'), findsOneWidget);
       expect(tester.takeException(), isNull);
       pass('Stats / rewards screen');
@@ -209,17 +209,17 @@ void main() {
     testWidgets('session persists offline (startup routing is local)', (
       tester,
     ) async {
-      // pumpSpendly signs in as the local user with no network; the home
+      // pumpSpendify signs in as the local user with no network; the home
       // screen renders, proving the routing decision needed no Firebase call.
-      await pumpSpendly(tester, home: const HomeScreen(), online: false);
-      expect(find.text('Spendly'), findsOneWidget);
+      await pumpSpendify(tester, home: const HomeScreen(), online: false);
+      expect(find.text('Spendify'), findsOneWidget);
       pass('App relaunch with session intact');
     });
 
     testWidgets('cached advice is visible offline with its timestamp', (
       tester,
     ) async {
-      final repos = await pumpSpendly(
+      final repos = await pumpSpendify(
         tester,
         home: const AdviceScreen(),
         geminiApiKey: 'test-key',
@@ -255,7 +255,7 @@ void main() {
 
   group('AI + sync degrade gracefully (no crash)', () {
     testWidgets('receipt scanning says it needs a connection', (tester) async {
-      await pumpSpendly(
+      await pumpSpendify(
         tester,
         home: const ReceiptScanScreen(),
         geminiApiKey: 'test-key',
@@ -272,7 +272,7 @@ void main() {
     testWidgets('advice regeneration with no cache shows an honest message', (
       tester,
     ) async {
-      final repos = await pumpSpendly(
+      final repos = await pumpSpendify(
         tester,
         home: const AdviceScreen(),
         geminiApiKey: 'test-key',
@@ -288,7 +288,7 @@ void main() {
     });
 
     testWidgets('sync is a no-op when offline', (tester) async {
-      final repos = await pumpSpendly(
+      final repos = await pumpSpendify(
         tester,
         home: const HomeScreen(),
         online: false,

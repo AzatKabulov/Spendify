@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/domain/entities/budget.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/domain/entities/period_aggregate.dart';
-import 'package:spendly/domain/entities/transaction.dart';
-import 'package:spendly/domain/services/gamification_engine.dart';
-import 'package:spendly/domain/services/gamification_rules.dart';
-import 'package:spendly/presentation/providers/gamification_providers.dart';
+import 'package:spendify/domain/entities/budget.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/domain/entities/period_aggregate.dart';
+import 'package:spendify/domain/entities/transaction.dart';
+import 'package:spendify/domain/services/gamification_engine.dart';
+import 'package:spendify/domain/services/gamification_rules.dart';
+import 'package:spendify/presentation/providers/gamification_providers.dart';
 
 import '../support/fake_repositories.dart';
 

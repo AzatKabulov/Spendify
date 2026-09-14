@@ -189,7 +189,7 @@ class _NoBudgets extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Set a weekly or monthly limit — overall or per category — and '
-              'Spendly will warn you as you approach it.',
+              'Spendify will warn you as you approach it.',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,

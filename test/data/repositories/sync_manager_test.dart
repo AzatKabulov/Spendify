@@ -1,12 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/data/repositories/aggregation_maintenance.dart';
-import 'package:spendly/data/repositories/sync_manager.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/domain/entities/sync_snapshot.dart';
-import 'package:spendly/domain/entities/transaction.dart';
-import 'package:spendly/domain/repositories/remote_sync_gateway.dart';
+import 'package:spendify/data/repositories/aggregation_maintenance.dart';
+import 'package:spendify/data/repositories/sync_manager.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/domain/entities/sync_snapshot.dart';
+import 'package:spendify/domain/entities/transaction.dart';
+import 'package:spendify/domain/repositories/remote_sync_gateway.dart';
 
 import '../../support/fake_repositories.dart';
 import '../../support/fake_sync.dart';

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/core/constants.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/domain/entities/transaction.dart';
-import 'package:spendly/presentation/screens/reports_screen.dart';
+import 'package:spendify/core/constants.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/domain/entities/transaction.dart';
+import 'package:spendify/presentation/screens/reports_screen.dart';
 
 import '../support/widget_test_scaffold.dart';
 
@@ -29,7 +29,7 @@ void main() {
   ) async {
     // Local clock is pinned to 2026-09-15, so the screen opens on Sep 2026
     // (monthly). Seed income + two expense categories inside that month.
-    final repos = await pumpSpendly(tester, home: const ReportsScreen());
+    final repos = await pumpSpendify(tester, home: const ReportsScreen());
 
     await repos.seedTransaction(
       _txn(
@@ -95,7 +95,7 @@ void main() {
   testWidgets('shows a clear empty state for a period with no transactions', (
     tester,
   ) async {
-    await pumpSpendly(tester, home: const ReportsScreen());
+    await pumpSpendify(tester, home: const ReportsScreen());
     await tester.pumpAndSettle();
 
     expect(find.text('No transactions this period'), findsOneWidget);
@@ -112,7 +112,7 @@ void main() {
   testWidgets('navigating to a previous empty period shows the empty state', (
     tester,
   ) async {
-    final repos = await pumpSpendly(tester, home: const ReportsScreen());
+    final repos = await pumpSpendify(tester, home: const ReportsScreen());
     await repos.seedTransaction(
       _txn(
         't-food',

@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/core/constants.dart';
-import 'package:spendly/data/repositories/hive_transaction_repository.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/domain/entities/transaction.dart';
+import 'package:spendify/core/constants.dart';
+import 'package:spendify/data/repositories/hive_transaction_repository.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/domain/entities/transaction.dart';
 
 import '../../support/hive_test_harness.dart';
 

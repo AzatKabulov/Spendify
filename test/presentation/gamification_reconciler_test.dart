@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/core/constants.dart';
-import 'package:spendly/domain/entities/budget.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/domain/entities/period_aggregate.dart';
-import 'package:spendly/domain/services/gamification_rules.dart';
-import 'package:spendly/presentation/providers/gamification_providers.dart';
+import 'package:spendify/core/constants.dart';
+import 'package:spendify/domain/entities/budget.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/domain/entities/period_aggregate.dart';
+import 'package:spendify/domain/services/gamification_rules.dart';
+import 'package:spendify/presentation/providers/gamification_providers.dart';
 
 import '../support/widget_test_scaffold.dart';
 
@@ -66,7 +66,7 @@ void main() {
   });
 
   group('reconciler (wired)', () {
-    // pumpSpendly pins "now" to 2026-09-15, so the previous month is 2026-08.
+    // pumpSpendify pins "now" to 2026-09-15, so the previous month is 2026-08.
     Budget augustBudget() => Budget.create(
       id: 'b1',
       userId: kLocalUserId,
@@ -92,7 +92,7 @@ void main() {
     );
 
     testWidgets('within-limit period awards the big XP', (tester) async {
-      final repos = await pumpSpendly(tester, home: const _Blank());
+      final repos = await pumpSpendify(tester, home: const _Blank());
       await repos.budgets.add(augustBudget());
       await repos.aggregates.put(augustSpend(30000)); // RM 300 <= RM 500
 
@@ -110,7 +110,7 @@ void main() {
     testWidgets('exceeded period awards nothing and never penalises', (
       tester,
     ) async {
-      final repos = await pumpSpendly(tester, home: const _Blank());
+      final repos = await pumpSpendify(tester, home: const _Blank());
       await repos.budgets.add(augustBudget());
       await repos.aggregates.put(augustSpend(80000)); // RM 800 > RM 500
 
@@ -125,7 +125,7 @@ void main() {
     });
 
     testWidgets('running twice awards once', (tester) async {
-      final repos = await pumpSpendly(tester, home: const _Blank());
+      final repos = await pumpSpendify(tester, home: const _Blank());
       await repos.budgets.add(augustBudget());
       await repos.aggregates.put(augustSpend(10000));
 

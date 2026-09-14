@@ -1,6 +1,6 @@
-# Spendly — Phased Build Plan
+# Spendify — Phased Build Plan
 
-Implementation plan for **Spendly: An AI-Powered Android Finance Tracker with Gamification**, built to match the approved FYP1 proposal. Every phase maps back to a section of that report so the finished app can be defended against what was proposed.
+Implementation plan for **Spendify: An AI-Powered Android Finance Tracker with Gamification**, built to match the approved FYP1 proposal. Every phase maps back to a section of that report so the finished app can be defended against what was proposed.
 
 **How to use this:** one phase per Claude Code session. Finish a phase, run its "Done when" checks, commit, then move on. Don't start a phase before the previous one passes its checks — most of the ordering exists to protect the offline-first architecture, and skipping ahead is how that gets quietly broken.
 
@@ -47,7 +47,7 @@ The rule that makes Report §3.2.2 "Maintainability" true: **`domain/` imports n
 **Goal:** an empty but correctly-shaped app that builds and runs on an emulator.
 
 **Build:**
-- `flutter create spendly`, Android-only config, min SDK 21+
+- `flutter create spendify`, Android-only config, min SDK 21+
 - Folder structure above, with placeholder files so the shape is visible
 - Riverpod, Hive, `flutter_secure_storage`, `intl`, `fl_chart` (or similar) added to `pubspec.yaml`
 - Git repo initialised, `.gitignore` covering `google-services.json`, `.env`, any key files

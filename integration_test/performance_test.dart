@@ -16,25 +16,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:spendly/core/constants.dart';
-import 'package:spendly/data/local/hive_initializer.dart';
-import 'package:spendly/data/local/hive_registrar.dart';
-import 'package:spendly/data/local/models/transaction_model.dart';
-import 'package:spendly/data/remote/firebase_bootstrap.dart';
-import 'package:spendly/data/repositories/aggregation_maintenance.dart';
-import 'package:spendly/data/repositories/hive_category_repository.dart';
-import 'package:spendly/data/repositories/hive_period_aggregate_repository.dart';
-import 'package:spendly/data/repositories/hive_transaction_repository.dart';
-import 'package:spendly/domain/entities/category.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/presentation/providers/ai_providers.dart';
-import 'package:spendly/presentation/providers/auth_providers.dart';
-import 'package:spendly/presentation/providers/repository_providers.dart';
-import 'package:spendly/presentation/screens/budgets_screen.dart';
-import 'package:spendly/presentation/screens/home_screen.dart';
-import 'package:spendly/presentation/screens/reports_screen.dart';
-import 'package:spendly/presentation/screens/stats_screen.dart';
-import 'package:spendly/presentation/screens/transaction_form_screen.dart';
+import 'package:spendify/core/constants.dart';
+import 'package:spendify/data/local/hive_initializer.dart';
+import 'package:spendify/data/local/hive_registrar.dart';
+import 'package:spendify/data/local/models/transaction_model.dart';
+import 'package:spendify/data/remote/firebase_bootstrap.dart';
+import 'package:spendify/data/repositories/aggregation_maintenance.dart';
+import 'package:spendify/data/repositories/hive_category_repository.dart';
+import 'package:spendify/data/repositories/hive_period_aggregate_repository.dart';
+import 'package:spendify/data/repositories/hive_transaction_repository.dart';
+import 'package:spendify/domain/entities/category.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/presentation/providers/ai_providers.dart';
+import 'package:spendify/presentation/providers/auth_providers.dart';
+import 'package:spendify/presentation/providers/repository_providers.dart';
+import 'package:spendify/presentation/screens/budgets_screen.dart';
+import 'package:spendify/presentation/screens/home_screen.dart';
+import 'package:spendify/presentation/screens/reports_screen.dart';
+import 'package:spendify/presentation/screens/stats_screen.dart';
+import 'package:spendify/presentation/screens/transaction_form_screen.dart';
 
 const _seedCount = 5000;
 const _categoryCount = 15;
@@ -46,7 +46,7 @@ void main() {
   testWidgets('core-action timings, $_seedCount transactions', (tester) async {
     // --- boot + seed the real encrypted Hive stack once -----------------
     await Hive.initFlutter();
-    if (!Hive.isAdapterRegistered(0)) registerSpendlyHiveAdapters();
+    if (!Hive.isAdapterRegistered(0)) registerSpendifyHiveAdapters();
     await Hive.close();
     for (final name in HiveBoxes.all) {
       await Hive.deleteBoxFromDisk(name);

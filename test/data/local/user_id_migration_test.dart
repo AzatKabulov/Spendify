@@ -1,12 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/core/constants.dart';
-import 'package:spendly/data/local/models/budget_model.dart';
-import 'package:spendly/data/local/models/category_model.dart';
-import 'package:spendly/data/local/models/gamification_state_model.dart';
-import 'package:spendly/data/local/models/period_aggregate_model.dart';
-import 'package:spendly/data/local/models/transaction_model.dart';
-import 'package:spendly/data/local/user_id_migration.dart';
-import 'package:spendly/domain/entities/enums.dart';
+import 'package:spendify/core/constants.dart';
+import 'package:spendify/data/local/models/budget_model.dart';
+import 'package:spendify/data/local/models/category_model.dart';
+import 'package:spendify/data/local/models/gamification_state_model.dart';
+import 'package:spendify/data/local/models/period_aggregate_model.dart';
+import 'package:spendify/data/local/models/transaction_model.dart';
+import 'package:spendify/data/local/user_id_migration.dart';
+import 'package:spendify/domain/entities/enums.dart';
 
 import '../../support/hive_test_harness.dart';
 

@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/core/constants.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/domain/entities/transaction.dart';
-import 'package:spendly/presentation/providers/budget_providers.dart';
-import 'package:spendly/presentation/screens/budgets_screen.dart';
-import 'package:spendly/presentation/screens/home_screen.dart';
-import 'package:spendly/presentation/widgets/budget_warning_banner.dart';
+import 'package:spendify/core/constants.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/domain/entities/transaction.dart';
+import 'package:spendify/presentation/providers/budget_providers.dart';
+import 'package:spendify/presentation/screens/budgets_screen.dart';
+import 'package:spendify/presentation/screens/home_screen.dart';
+import 'package:spendify/presentation/widgets/budget_warning_banner.dart';
 
 import '../support/widget_test_scaffold.dart';
 
@@ -17,7 +17,7 @@ void main() {
   testWidgets('add transactions → set budget → exceed → see the warning', (
     tester,
   ) async {
-    final repos = await pumpSpendly(tester, home: const HomeScreen());
+    final repos = await pumpSpendify(tester, home: const HomeScreen());
 
     // 1. the user logs three lunches this month (RM 180 total on cat-0)
     for (var i = 0; i < 3; i++) {

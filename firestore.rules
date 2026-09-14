@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// Spendly — Firestore security rules (Phase 6).
+// Spendify — Firestore security rules (Phase 6).
 //
 // Model: single-user backup/restore. Firestore is NOT the source of truth
 // (CLAUDE.md §3) — it is a per-user backup target. Every document lives under

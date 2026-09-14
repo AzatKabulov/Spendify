@@ -13,7 +13,7 @@ import 'models/transaction_model.dart';
 /// with [Hive.isAdapterRegistered].
 ///
 /// Enum adapters are registered before the model adapters that depend on them.
-void registerSpendlyHiveAdapters() {
+void registerSpendifyHiveAdapters() {
   _register(TransactionTypeAdapter());
   _register(TransactionSourceAdapter());
   _register(BudgetPeriodAdapter());

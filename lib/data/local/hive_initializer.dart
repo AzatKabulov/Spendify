@@ -43,7 +43,7 @@ class HiveStore {
 Future<HiveStore> bootstrapHive({EncryptionKeyStore? keyStore}) async {
   final sw = Stopwatch()..start();
   await Hive.initFlutter();
-  registerSpendlyHiveAdapters();
+  registerSpendifyHiveAdapters();
   final initMs = sw.elapsedMilliseconds;
 
   final store = keyStore ?? SecureStorageEncryptionKeyStore();

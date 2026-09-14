@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/core/constants.dart';
-import 'package:spendly/domain/entities/budget.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/domain/entities/transaction.dart';
-import 'package:spendly/presentation/screens/budget_form_screen.dart';
-import 'package:spendly/presentation/screens/budgets_screen.dart';
-import 'package:spendly/presentation/screens/home_screen.dart';
+import 'package:spendify/core/constants.dart';
+import 'package:spendify/domain/entities/budget.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/domain/entities/transaction.dart';
+import 'package:spendify/presentation/screens/budget_form_screen.dart';
+import 'package:spendify/presentation/screens/budgets_screen.dart';
+import 'package:spendify/presentation/screens/home_screen.dart';
 
 import '../support/widget_test_scaffold.dart';
 
@@ -34,7 +34,7 @@ Transaction sepExpense(String id, int minor, {String category = 'c'}) =>
 
 void main() {
   testWidgets('rejects a limit of zero', (tester) async {
-    await pumpSpendly(tester, home: const BudgetFormScreen());
+    await pumpSpendify(tester, home: const BudgetFormScreen());
 
     await tester.enterText(find.widgetWithText(TextFormField, 'Limit'), '0');
     await tester.tap(find.widgetWithText(FilledButton, 'Create'));
@@ -44,7 +44,7 @@ void main() {
   });
 
   testWidgets('rejects an unparseable limit', (tester) async {
-    await pumpSpendly(tester, home: const BudgetFormScreen());
+    await pumpSpendify(tester, home: const BudgetFormScreen());
 
     await tester.enterText(
       find.widgetWithText(TextFormField, 'Limit'),
@@ -57,7 +57,7 @@ void main() {
   });
 
   testWidgets('rejects a duplicate (scope, period) budget', (tester) async {
-    final repos = await pumpSpendly(tester, home: const BudgetFormScreen());
+    final repos = await pumpSpendify(tester, home: const BudgetFormScreen());
     await repos.budgets.add(overallMonthly(50000));
     await tester.pumpAndSettle();
 
@@ -73,7 +73,7 @@ void main() {
   });
 
   testWidgets('creates a valid budget and lists it', (tester) async {
-    final repos = await pumpSpendly(tester, home: const BudgetsScreen());
+    final repos = await pumpSpendify(tester, home: const BudgetsScreen());
 
     await tester.tap(find.widgetWithText(FloatingActionButton, 'New'));
     await tester.pumpAndSettle();
@@ -90,7 +90,7 @@ void main() {
   testWidgets('home shows a warning banner once a budget is exceeded', (
     tester,
   ) async {
-    final repos = await pumpSpendly(tester, home: const HomeScreen());
+    final repos = await pumpSpendify(tester, home: const HomeScreen());
     await repos.budgets.add(overallMonthly(10000)); // RM 100 monthly
 
     await repos.seedTransaction(sepExpense('e1', 6000));

@@ -1,11 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/data/repositories/data_exporter.dart';
-import 'package:spendly/domain/entities/budget.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/domain/entities/gamification_state.dart';
-import 'package:spendly/domain/entities/transaction.dart';
+import 'package:spendify/data/repositories/data_exporter.dart';
+import 'package:spendify/domain/entities/budget.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/domain/entities/gamification_state.dart';
+import 'package:spendify/domain/entities/transaction.dart';
 
 import '../../support/fake_repositories.dart';
 
@@ -72,7 +72,7 @@ void main() {
     final decoded = jsonDecode(raw) as Map<String, dynamic>;
 
     expect(decoded['export'], isA<Map<String, dynamic>>());
-    expect(decoded['export']['app'], 'Spendly');
+    expect(decoded['export']['app'], 'Spendify');
     expect(decoded['export']['account'], 'demo@example.com');
     expect(decoded['export']['generatedAt'], '2026-09-10T08:00:00.000Z');
 

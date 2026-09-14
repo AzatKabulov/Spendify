@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/core/constants.dart';
-import 'package:spendly/domain/entities/advice_item.dart';
-import 'package:spendly/domain/entities/advice_record.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/domain/entities/period_aggregate.dart';
-import 'package:spendly/presentation/providers/advice_providers.dart';
-import 'package:spendly/presentation/screens/advice_screen.dart';
-import 'package:spendly/presentation/screens/home_screen.dart';
+import 'package:spendify/core/constants.dart';
+import 'package:spendify/domain/entities/advice_item.dart';
+import 'package:spendify/domain/entities/advice_record.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/domain/entities/period_aggregate.dart';
+import 'package:spendify/presentation/providers/advice_providers.dart';
+import 'package:spendify/presentation/screens/advice_screen.dart';
+import 'package:spendify/presentation/screens/home_screen.dart';
 
 import '../support/widget_test_scaffold.dart';
 
@@ -66,7 +66,7 @@ void main() {
   testWidgets('under 10 transactions: honest empty state, no API call', (
     tester,
   ) async {
-    final repos = await pumpSpendly(
+    final repos = await pumpSpendify(
       tester,
       home: const AdviceScreen(),
       geminiApiKey: 'test-key',
@@ -80,7 +80,7 @@ void main() {
   testWidgets(
     'with data: generates once, shows cards + disclaimer + timestamp',
     (tester) async {
-      final repos = await pumpSpendly(
+      final repos = await pumpSpendify(
         tester,
         home: const AdviceScreen(),
         geminiApiKey: 'test-key',
@@ -102,7 +102,7 @@ void main() {
   testWidgets('viewing twice with unchanged data makes ONE API call', (
     tester,
   ) async {
-    final repos = await pumpSpendly(
+    final repos = await pumpSpendify(
       tester,
       home: const AdviceScreen(),
       geminiApiKey: 'test-key',
@@ -125,7 +125,7 @@ void main() {
   testWidgets('offline with cached advice: shows it with an offline note', (
     tester,
   ) async {
-    final repos = await pumpSpendly(
+    final repos = await pumpSpendify(
       tester,
       home: const AdviceScreen(),
       geminiApiKey: 'test-key',
@@ -153,7 +153,7 @@ void main() {
   testWidgets('offline, no cache yet: honest message, not an error screen', (
     tester,
   ) async {
-    final repos = await pumpSpendly(
+    final repos = await pumpSpendify(
       tester,
       home: const AdviceScreen(),
       geminiApiKey: 'test-key',
@@ -170,7 +170,7 @@ void main() {
   testWidgets('"Insights" appears in the home menu when configured', (
     tester,
   ) async {
-    await pumpSpendly(
+    await pumpSpendify(
       tester,
       home: const HomeScreen(),
       geminiApiKey: 'test-key',
@@ -188,7 +188,7 @@ void main() {
   testWidgets('"Insights" is hidden when no API key is configured', (
     tester,
   ) async {
-    await pumpSpendly(tester, home: const HomeScreen());
+    await pumpSpendify(tester, home: const HomeScreen());
 
     await tester.tap(find.byType(PopupMenuButton<int>));
     await tester.pumpAndSettle();

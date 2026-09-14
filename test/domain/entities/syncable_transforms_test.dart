@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/domain/entities/budget.dart';
-import 'package:spendly/domain/entities/category.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/domain/entities/patch.dart';
-import 'package:spendly/domain/entities/transaction.dart';
+import 'package:spendify/domain/entities/budget.dart';
+import 'package:spendify/domain/entities/category.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/domain/entities/patch.dart';
+import 'package:spendify/domain/entities/transaction.dart';
 
 void main() {
   final t0 = DateTime.utc(2026, 1, 1);

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/data/repositories/firebase_auth_error_mapper.dart';
-import 'package:spendly/domain/repositories/auth_repository.dart';
+import 'package:spendify/data/repositories/firebase_auth_error_mapper.dart';
+import 'package:spendify/domain/repositories/auth_repository.dart';
 
 void main() {
   // code -> (expected type, expected user-facing message)

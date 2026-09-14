@@ -2,8 +2,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:hive/hive.dart';
-import 'package:spendly/data/local/hive_initializer.dart';
-import 'package:spendly/data/local/hive_registrar.dart';
+import 'package:spendify/data/local/hive_initializer.dart';
+import 'package:spendify/data/local/hive_registrar.dart';
 
 /// Spins up a real, AES-encrypted Hive stack in a throwaway temp directory so
 /// repository tests exercise the same code path as the app (adapters, cipher,
@@ -21,9 +21,9 @@ class HiveTestHarness {
   );
 
   static Future<HiveTestHarness> start() async {
-    final dir = await Directory.systemTemp.createTemp('spendly_hive_test_');
+    final dir = await Directory.systemTemp.createTemp('spendify_hive_test_');
     Hive.init(dir.path);
-    registerSpendlyHiveAdapters();
+    registerSpendifyHiveAdapters();
     final store = await openEncryptedBoxes(HiveAesCipher(testKey));
     return HiveTestHarness._(dir, store);
   }

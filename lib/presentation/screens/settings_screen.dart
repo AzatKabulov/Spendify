@@ -154,7 +154,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     try {
       final stamp = DateFormat('yyyyMMdd-HHmmss').format(DateTime.now());
       final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/spendly-export-$stamp.json');
+      final file = File('${dir.path}/spendify-export-$stamp.json');
       await file.writeAsString(json);
       messenger.showSnackBar(SnackBar(content: Text('Saved to ${file.path}')));
     } catch (_) {

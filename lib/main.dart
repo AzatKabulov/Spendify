@@ -42,7 +42,7 @@ Future<void> main() async {
   // also runs the app as a local demo user, so `AuthGate` opens straight on the
   // home screen without Firebase. Inert (and tree-shaken) otherwise.
   if (await maybeDemoSeed(store)) {
-    session ??= const AuthSession(uid: kLocalUserId, email: 'demo@spendly.app');
+    session ??= const AuthSession(uid: kLocalUserId, email: 'demo@spendify.app');
   }
 
   final container = ProviderContainer(
@@ -89,18 +89,18 @@ Future<void> main() async {
   }
 
   runApp(
-    UncontrolledProviderScope(container: container, child: const SpendlyApp()),
+    UncontrolledProviderScope(container: container, child: const SpendifyApp()),
   );
 }
 
-class SpendlyApp extends ConsumerStatefulWidget {
-  const SpendlyApp({super.key});
+class SpendifyApp extends ConsumerStatefulWidget {
+  const SpendifyApp({super.key});
 
   @override
-  ConsumerState<SpendlyApp> createState() => _SpendlyAppState();
+  ConsumerState<SpendifyApp> createState() => _SpendifyAppState();
 }
 
-class _SpendlyAppState extends ConsumerState<SpendlyApp>
+class _SpendifyAppState extends ConsumerState<SpendifyApp>
     with WidgetsBindingObserver {
   @override
   void initState() {
@@ -127,7 +127,7 @@ class _SpendlyAppState extends ConsumerState<SpendlyApp>
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Spendly',
+      title: 'Spendify',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       home: const AuthGate(),

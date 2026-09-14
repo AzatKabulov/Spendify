@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/core/constants.dart';
-import 'package:spendly/domain/entities/gamification_state.dart';
-import 'package:spendly/domain/services/gamification_rules.dart';
-import 'package:spendly/presentation/screens/home_screen.dart';
-import 'package:spendly/presentation/screens/stats_screen.dart';
+import 'package:spendify/core/constants.dart';
+import 'package:spendify/domain/entities/gamification_state.dart';
+import 'package:spendify/domain/services/gamification_rules.dart';
+import 'package:spendify/presentation/screens/home_screen.dart';
+import 'package:spendify/presentation/screens/stats_screen.dart';
 
 import '../support/widget_test_scaffold.dart';
 
 void main() {
   testWidgets('shows level, coins, streak and the badge grid', (tester) async {
-    final repos = await pumpSpendly(tester, home: const StatsScreen());
+    final repos = await pumpSpendify(tester, home: const StatsScreen());
 
     await repos.gamification.save(
       GamificationState(
@@ -35,7 +35,7 @@ void main() {
   });
 
   testWidgets('fresh state renders at level 1 with no badges', (tester) async {
-    await pumpSpendly(tester, home: const StatsScreen());
+    await pumpSpendify(tester, home: const StatsScreen());
     await tester.pumpAndSettle();
 
     expect(find.text('Level 1'), findsOneWidget);
@@ -43,7 +43,7 @@ void main() {
   });
 
   testWidgets('reachable from the home overflow menu', (tester) async {
-    await pumpSpendly(tester, home: const HomeScreen());
+    await pumpSpendify(tester, home: const HomeScreen());
 
     await tester.tap(find.byType(PopupMenuButton<int>));
     await tester.pumpAndSettle();

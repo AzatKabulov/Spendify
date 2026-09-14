@@ -2,7 +2,7 @@
 <!--
   Phase 10 security audit: HTTPS only, no cleartext anywhere.
 
-  Every network call Spendly makes is HTTPS:
+  Every network call Spendify makes is HTTPS:
     - Google Gemini  (generativelanguage.googleapis.com)
     - Firebase Auth / Cloud Firestore  (Google SDK endpoints)
     - connectivity_plus reachability probe

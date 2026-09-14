@@ -1,4 +1,4 @@
-# Spendly — Demo script (Phase 12 Part E)
+# Spendify — Demo script (Phase 12 Part E)
 
 A run sheet for the CP2 live demo. Rehearse this end to end, including the
 airplane-mode segment, before presenting it for real.
@@ -23,7 +23,7 @@ airplane-mode segment, before presenting it for real.
    is safe to leave in the launch command for the whole demo session; it will
    not re-seed or clobber anything after the first run. There is no real
    sign-in involved: with no persisted session, `main()` runs the app as a
-   local demo user (`demo@spendly.app`) so it opens straight on the home
+   local demo user (`demo@spendify.app`) so it opens straight on the home
    screen.
 
 2. **What the seed loads** (`lib/core/dev/demo_seed.dart`, verified by
@@ -48,7 +48,7 @@ airplane-mode segment, before presenting it for real.
 
 ### Opening (30 seconds)
 
-> "Spendly is an offline-first budgeting app — everything you're about to see,
+> "Spendify is an offline-first budgeting app — everything you're about to see,
 > except two clearly-marked AI features, works with zero network connection.
 > Local data comes first; the cloud is a backup, not a dependency."
 

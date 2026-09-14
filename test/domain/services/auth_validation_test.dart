@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/domain/services/auth_validation.dart';
+import 'package:spendify/domain/services/auth_validation.dart';
 
 void main() {
   group('validateEmail', () {

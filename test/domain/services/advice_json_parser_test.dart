@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/domain/services/advice_json_parser.dart';
+import 'package:spendify/domain/services/advice_json_parser.dart';
 
 void main() {
   const clean =

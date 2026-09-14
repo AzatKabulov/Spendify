@@ -4,19 +4,19 @@ library;
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/core/constants.dart';
-import 'package:spendly/data/local/models/transaction_model.dart';
-import 'package:spendly/data/repositories/aggregation_maintenance.dart';
-import 'package:spendly/data/repositories/hive_period_aggregate_repository.dart';
-import 'package:spendly/data/repositories/hive_transaction_repository.dart';
-import 'package:spendly/domain/entities/budget.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/domain/entities/period_aggregate.dart';
-import 'package:spendly/domain/entities/transaction.dart';
-import 'package:spendly/domain/services/aggregation_service.dart';
-import 'package:spendly/domain/services/balance_calculator.dart';
-import 'package:spendly/domain/services/budget_evaluator.dart';
-import 'package:spendly/domain/services/transaction_ordering.dart';
+import 'package:spendify/core/constants.dart';
+import 'package:spendify/data/local/models/transaction_model.dart';
+import 'package:spendify/data/repositories/aggregation_maintenance.dart';
+import 'package:spendify/data/repositories/hive_period_aggregate_repository.dart';
+import 'package:spendify/data/repositories/hive_transaction_repository.dart';
+import 'package:spendify/domain/entities/budget.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/domain/entities/period_aggregate.dart';
+import 'package:spendify/domain/entities/transaction.dart';
+import 'package:spendify/domain/services/aggregation_service.dart';
+import 'package:spendify/domain/services/balance_calculator.dart';
+import 'package:spendify/domain/services/budget_evaluator.dart';
+import 'package:spendify/domain/services/transaction_ordering.dart';
 
 import '../support/hive_test_harness.dart';
 

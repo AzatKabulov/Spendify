@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/data/remote/firestore_sync_gateway.dart';
-import 'package:spendly/domain/repositories/remote_sync_gateway.dart';
+import 'package:spendify/data/remote/firestore_sync_gateway.dart';
+import 'package:spendify/domain/repositories/remote_sync_gateway.dart';
 
 void main() {
   RemoteSyncException classify(String code) =>

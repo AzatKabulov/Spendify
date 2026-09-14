@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/core/constants.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/domain/entities/transaction.dart';
-import 'package:spendly/presentation/screens/home_screen.dart';
-import 'package:spendly/presentation/screens/transaction_form_screen.dart';
-import 'package:spendly/presentation/widgets/transaction_list_tile.dart';
+import 'package:spendify/core/constants.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/domain/entities/transaction.dart';
+import 'package:spendify/presentation/screens/home_screen.dart';
+import 'package:spendify/presentation/screens/transaction_form_screen.dart';
+import 'package:spendify/presentation/widgets/transaction_list_tile.dart';
 
 import '../support/widget_test_scaffold.dart';
 
@@ -26,7 +26,7 @@ void main() {
   testWidgets('adding a transaction awards XP and shows a reward', (
     tester,
   ) async {
-    final repos = await pumpSpendly(tester, home: const HomeScreen());
+    final repos = await pumpSpendify(tester, home: const HomeScreen());
 
     await tester.tap(find.widgetWithText(FloatingActionButton, 'Add'));
     await tester.pumpAndSettle();
@@ -52,7 +52,7 @@ void main() {
   });
 
   testWidgets('swipe-delete reverses the logged XP', (tester) async {
-    final repos = await pumpSpendly(tester, home: const HomeScreen());
+    final repos = await pumpSpendify(tester, home: const HomeScreen());
 
     // log through the form so the engine actually awards it
     await tester.tap(find.widgetWithText(FloatingActionButton, 'Add'));
@@ -78,7 +78,7 @@ void main() {
   testWidgets('a pre-existing seed does not double-count on load', (
     tester,
   ) async {
-    final repos = await pumpSpendly(tester, home: const HomeScreen());
+    final repos = await pumpSpendify(tester, home: const HomeScreen());
     // seeding bypasses TransactionActions -> no gamification event
     await repos.seedTransaction(seed('s1'));
     await tester.pumpAndSettle();

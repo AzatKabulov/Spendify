@@ -37,7 +37,7 @@ class DataExporter {
 
     return <String, Object?>{
       'export': <String, Object?>{
-        'app': 'Spendly',
+        'app': 'Spendify',
         'formatVersion': 1,
         'generatedAt': generatedAt.toUtc().toIso8601String(),
         'account': ?account,

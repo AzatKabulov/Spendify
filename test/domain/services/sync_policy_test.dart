@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/domain/services/sync_policy.dart';
+import 'package:spendify/domain/services/sync_policy.dart';
 
 void main() {
   group('remoteWins (last-write-wins)', () {

@@ -6,17 +6,17 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/core/constants.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/domain/entities/transaction.dart';
-import 'package:spendly/presentation/screens/auth/sign_in_screen.dart';
-import 'package:spendly/presentation/screens/budgets_screen.dart';
-import 'package:spendly/presentation/screens/categories_screen.dart';
-import 'package:spendly/presentation/screens/home_screen.dart';
-import 'package:spendly/presentation/screens/reports_screen.dart';
-import 'package:spendly/presentation/screens/settings_screen.dart';
-import 'package:spendly/presentation/screens/stats_screen.dart';
-import 'package:spendly/presentation/screens/transaction_form_screen.dart';
+import 'package:spendify/core/constants.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/domain/entities/transaction.dart';
+import 'package:spendify/presentation/screens/auth/sign_in_screen.dart';
+import 'package:spendify/presentation/screens/budgets_screen.dart';
+import 'package:spendify/presentation/screens/categories_screen.dart';
+import 'package:spendify/presentation/screens/home_screen.dart';
+import 'package:spendify/presentation/screens/reports_screen.dart';
+import 'package:spendify/presentation/screens/settings_screen.dart';
+import 'package:spendify/presentation/screens/stats_screen.dart';
+import 'package:spendify/presentation/screens/transaction_form_screen.dart';
 
 import '../support/widget_test_scaffold.dart';
 
@@ -89,7 +89,7 @@ void main() {
       };
       addTearDown(() => FlutterError.onError = prevOnError);
 
-      final repos = await pumpSpendly(
+      final repos = await pumpSpendify(
         tester,
         home: entry.value(),
         textScale: 2.0,

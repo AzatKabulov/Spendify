@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/domain/entities/category.dart';
-import 'package:spendly/domain/services/category_matcher.dart';
+import 'package:spendify/domain/entities/category.dart';
+import 'package:spendify/domain/services/category_matcher.dart';
 
 Category _cat(String id, String name, {bool isDeleted = false}) => Category(
   id: id,

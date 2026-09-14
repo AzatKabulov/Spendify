@@ -1,7 +1,7 @@
 import '../local/auth_session_store.dart';
 import '../local/hive_initializer.dart';
 
-/// Erases everything Spendly keeps on this device (Phase 10 "Delete all local
+/// Erases everything Spendify keeps on this device (Phase 10 "Delete all local
 /// data").
 ///
 /// **Decision (stated to the user in the confirmation dialog):** this clears

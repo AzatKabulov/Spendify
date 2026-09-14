@@ -1,4 +1,4 @@
-# Spendly — Architecture
+# Spendify — Architecture
 
 This is the engineering companion to §3.3 of the CP2 report. It describes the
 three layers, the six core components, how data flows, and why the app is
@@ -192,7 +192,7 @@ is asynchronous and a failure there never affects the saved transaction.
 | Seam | Used by |
 |---|---|
 | `HiveStore` behind `hiveStoreProvider` | swap real encrypted Hive for a temp-dir instance (`HiveTestHarness`) |
-| Repository interfaces in `domain/repositories/` | in-memory fakes for widget tests (`pumpSpendly`) |
+| Repository interfaces in `domain/repositories/` | in-memory fakes for widget tests (`pumpSpendify`) |
 | `clockProvider` / `localTimeProvider` | pin time in every test |
 | `ConnectivityMonitor` interface | `FakeConnectivityMonitor(startOnline:)` |
 | `RemoteSyncGateway` interface | fake gateway for sync-reconciliation tests |

@@ -1,4 +1,4 @@
-# Spendly — Release build (Phase 12 Part D)
+# Spendify — Release build (Phase 12 Part D)
 
 How the signed release APK is produced, what was verified, and what to do if
 the keystore is ever lost or moved to a new machine.
@@ -33,7 +33,7 @@ one; it was never meant to leave this machine.
 Keystore:    android/app/spendly-release.jks
 Alias:       spendly
 Algorithm:   RSA 2048, SHA384withRSA, 10 000-day validity (self-signed)
-DN:          CN=Azat Kabulov, OU=FYP Capstone 2, O=Spendly, L=Kuala Lumpur, ST=Selangor, C=MY
+DN:          CN=Azat Kabulov, OU=FYP Capstone 2, O=Spendify, L=Kuala Lumpur, ST=Selangor, C=MY
 ```
 
 Signing certificate fingerprints (from `apksigner verify --print-certs`, needed
@@ -64,7 +64,7 @@ keytool -genkeypair -v \
   -keystore android/app/spendly-release.jks \
   -keyalg RSA -keysize 2048 -validity 10000 \
   -alias spendly \
-  -dname "CN=<your name>, OU=FYP Capstone 2, O=Spendly, L=<city>, C=MY"
+  -dname "CN=<your name>, OU=FYP Capstone 2, O=Spendify, L=<city>, C=MY"
 ```
 
 `keytool` ships inside the JDK (`<jdk>/bin/keytool`) — Flutter's own bundled

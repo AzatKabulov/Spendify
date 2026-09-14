@@ -79,7 +79,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return GamificationFeedbackListener(
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Spendly'),
+          title: const Text('Spendify'),
           actions: <Widget>[
             const SyncStatusIndicator(),
             IconButton(

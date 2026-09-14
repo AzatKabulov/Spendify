@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/core/constants.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/domain/entities/transaction.dart';
-import 'package:spendly/presentation/screens/home_screen.dart';
+import 'package:spendify/core/constants.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/domain/entities/transaction.dart';
+import 'package:spendify/presentation/screens/home_screen.dart';
 
 import '../support/widget_test_scaffold.dart';
 
@@ -24,12 +24,12 @@ Transaction sampleTxn({
 
 void main() {
   testWidgets('empty state shows before any transaction', (tester) async {
-    await pumpSpendly(tester, home: const HomeScreen());
+    await pumpSpendify(tester, home: const HomeScreen());
     expect(find.text('No transactions yet'), findsOneWidget);
   });
 
   testWidgets('a seeded transaction appears in the list', (tester) async {
-    final repos = await pumpSpendly(tester, home: const HomeScreen());
+    final repos = await pumpSpendify(tester, home: const HomeScreen());
     await repos.seedTransaction(sampleTxn());
     await tester.pumpAndSettle();
 
@@ -38,7 +38,7 @@ void main() {
   });
 
   testWidgets('swipe deletes the row; UNDO restores it', (tester) async {
-    final repos = await pumpSpendly(tester, home: const HomeScreen());
+    final repos = await pumpSpendify(tester, home: const HomeScreen());
     await repos.seedTransaction(sampleTxn());
     await tester.pumpAndSettle();
 
@@ -65,7 +65,7 @@ void main() {
   });
 
   testWidgets('balance = income − expense, formatted', (tester) async {
-    final repos = await pumpSpendly(tester, home: const HomeScreen());
+    final repos = await pumpSpendify(tester, home: const HomeScreen());
     await repos.seedTransaction(
       sampleTxn(id: 'i', type: TransactionType.income, amountMinor: 100000),
     );
@@ -82,7 +82,7 @@ void main() {
   });
 
   testWidgets('tapping a row opens the edit form pre-filled', (tester) async {
-    final repos = await pumpSpendly(tester, home: const HomeScreen());
+    final repos = await pumpSpendify(tester, home: const HomeScreen());
     await repos.seedTransaction(sampleTxn(amountMinor: 4200));
     await tester.pumpAndSettle();
 

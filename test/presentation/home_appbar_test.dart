@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/presentation/screens/budgets_screen.dart';
-import 'package:spendly/presentation/screens/categories_screen.dart';
-import 'package:spendly/presentation/screens/home_screen.dart';
-import 'package:spendly/presentation/screens/reports_screen.dart';
-import 'package:spendly/presentation/screens/settings_screen.dart';
+import 'package:spendify/presentation/screens/budgets_screen.dart';
+import 'package:spendify/presentation/screens/categories_screen.dart';
+import 'package:spendify/presentation/screens/home_screen.dart';
+import 'package:spendify/presentation/screens/reports_screen.dart';
+import 'package:spendify/presentation/screens/settings_screen.dart';
 
 import '../support/widget_test_scaffold.dart';
 
@@ -22,7 +22,7 @@ void main() {
   testWidgets(
     'AppBar exposes Reports, Budgets and a Categories/Settings menu',
     (tester) async {
-      await pumpSpendly(tester, home: const HomeScreen());
+      await pumpSpendify(tester, home: const HomeScreen());
 
       // Direct navigation actions.
       expect(inAppBar(find.byTooltip('Reports')), findsOneWidget);
@@ -45,7 +45,7 @@ void main() {
   );
 
   testWidgets('each AppBar action routes to its screen', (tester) async {
-    await pumpSpendly(tester, home: const HomeScreen());
+    await pumpSpendify(tester, home: const HomeScreen());
 
     await tester.tap(inAppBar(find.byTooltip('Reports')));
     await tester.pumpAndSettle();

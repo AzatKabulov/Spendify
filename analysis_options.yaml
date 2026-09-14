@@ -1,4 +1,4 @@
-# Static analysis configuration for Spendly.
+# Static analysis configuration for Spendify.
 #
 # Base: flutter_lints (the Flutter-recommended set).
 # On top of that we run in strict mode and enforce a few rules the build plan

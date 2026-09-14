@@ -1,17 +1,17 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
-import 'package:spendly/data/local/hive_registrar.dart';
-import 'package:spendly/data/local/hive_types.dart';
-import 'package:spendly/data/local/models/budget_model.dart';
-import 'package:spendly/data/local/models/period_aggregate_model.dart';
-import 'package:spendly/data/local/models/transaction_model.dart';
-import 'package:spendly/domain/entities/enums.dart';
+import 'package:spendify/data/local/hive_registrar.dart';
+import 'package:spendify/data/local/hive_types.dart';
+import 'package:spendify/data/local/models/budget_model.dart';
+import 'package:spendify/data/local/models/period_aggregate_model.dart';
+import 'package:spendify/data/local/models/transaction_model.dart';
+import 'package:spendify/domain/entities/enums.dart';
 
 import '../../support/hive_test_harness.dart';
 
 void main() {
   test('enum adapters are registered at the reserved typeIds', () {
-    registerSpendlyHiveAdapters();
+    registerSpendifyHiveAdapters();
     expect(Hive.isAdapterRegistered(HiveTypeIds.transactionType), isTrue);
     expect(Hive.isAdapterRegistered(HiveTypeIds.transactionSource), isTrue);
     expect(Hive.isAdapterRegistered(HiveTypeIds.budgetPeriod), isTrue);

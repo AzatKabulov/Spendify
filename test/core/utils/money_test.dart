@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/core/utils/money.dart';
+import 'package:spendify/core/utils/money.dart';
 
 void main() {
   group('parseAmountToMinor', () {

@@ -1,4 +1,4 @@
-# Spendly — Manual test checklist
+# Spendify — Manual test checklist
 
 Everything automatable has been run (`flutter analyze`, the full test suite,
 the algorithmic + on-device performance tests, the offline reliability
@@ -143,7 +143,7 @@ eyes on the actual output:
 
 Full protocol, results sheet and SUS questionnaire: `docs/USABILITY_TEST_PROTOCOL.md`.
 
-- [ ] Recruit 3–5 people who have never seen Spendly.
+- [ ] Recruit 3–5 people who have never seen Spendify.
 - [ ] Fresh install on the device they'll use, no instructions given.
 - [ ] One task per person: *"You just spent RM 12.50 on lunch. Record that in
       the app."* Time from app-open to a saved transaction.

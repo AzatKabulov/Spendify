@@ -47,8 +47,8 @@ final _results = <String, bool>{};
 
 Future<void> main() async {
   final stamp = DateTime.now().millisecondsSinceEpoch;
-  final emailA = 'spendly-audit-a-$stamp@example.com';
-  final emailB = 'spendly-audit-b-$stamp@example.com';
+  final emailA = 'spendify-audit-a-$stamp@example.com';
+  final emailB = 'spendify-audit-b-$stamp@example.com';
   const password = 'AuditProbe!2026xyz';
   final probeDocId = 'audit-probe-$stamp';
 

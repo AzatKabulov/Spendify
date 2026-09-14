@@ -1,4 +1,4 @@
-# Spendly — Test Results (Phase 11)
+# Spendify — Test Results (Phase 11)
 
 Evidence pack for CP2 §3.1 (testing stage) and §3.2.2 (non-functional
 requirements). Every requirement in `CLAUDE.md §6` has a measured result below,

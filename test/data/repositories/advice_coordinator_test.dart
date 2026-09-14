@@ -1,12 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/domain/entities/advice_item.dart';
-import 'package:spendly/domain/entities/budget.dart';
-import 'package:spendly/domain/entities/category.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/domain/entities/period_aggregate.dart';
-import 'package:spendly/domain/repositories/advice_generator_repository.dart';
-import 'package:spendly/domain/services/advice_summary_builder.dart';
-import 'package:spendly/data/repositories/advice_coordinator.dart';
+import 'package:spendify/domain/entities/advice_item.dart';
+import 'package:spendify/domain/entities/budget.dart';
+import 'package:spendify/domain/entities/category.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/domain/entities/period_aggregate.dart';
+import 'package:spendify/domain/repositories/advice_generator_repository.dart';
+import 'package:spendify/domain/services/advice_summary_builder.dart';
+import 'package:spendify/data/repositories/advice_coordinator.dart';
 
 import '../../support/fake_repositories.dart';
 import '../../support/fake_sync.dart';

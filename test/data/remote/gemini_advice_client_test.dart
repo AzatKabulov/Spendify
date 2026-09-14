@@ -3,13 +3,13 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:spendly/data/remote/gemini_advice_client.dart';
-import 'package:spendly/domain/entities/budget.dart';
-import 'package:spendly/domain/entities/category.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/domain/entities/period_aggregate.dart';
-import 'package:spendly/domain/repositories/advice_generator_repository.dart';
-import 'package:spendly/domain/services/advice_summary_builder.dart';
+import 'package:spendify/data/remote/gemini_advice_client.dart';
+import 'package:spendify/domain/entities/budget.dart';
+import 'package:spendify/domain/entities/category.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/domain/entities/period_aggregate.dart';
+import 'package:spendify/domain/repositories/advice_generator_repository.dart';
+import 'package:spendify/domain/services/advice_summary_builder.dart';
 
 String _geminiResponse(String text) => jsonEncode({
   'candidates': [

@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:spendly/domain/repositories/connectivity_monitor.dart';
-import 'package:spendly/domain/repositories/remote_sync_gateway.dart';
-import 'package:spendly/domain/repositories/sync_metadata_store.dart';
+import 'package:spendify/domain/repositories/connectivity_monitor.dart';
+import 'package:spendify/domain/repositories/remote_sync_gateway.dart';
+import 'package:spendify/domain/repositories/sync_metadata_store.dart';
 
 // Gamification fake lives with the other repository fakes; re-exported so the
 // sync tests that already import this file keep compiling.

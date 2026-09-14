@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/core/constants.dart';
-import 'package:spendly/domain/entities/advice_item.dart';
-import 'package:spendly/domain/entities/advice_record.dart';
-import 'package:spendly/domain/entities/ai_consent.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/domain/entities/transaction.dart';
-import 'package:spendly/presentation/providers/ai_providers.dart';
-import 'package:spendly/presentation/screens/home_screen.dart';
-import 'package:spendly/presentation/screens/settings_screen.dart';
+import 'package:spendify/core/constants.dart';
+import 'package:spendify/domain/entities/advice_item.dart';
+import 'package:spendify/domain/entities/advice_record.dart';
+import 'package:spendify/domain/entities/ai_consent.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/domain/entities/transaction.dart';
+import 'package:spendify/presentation/providers/ai_providers.dart';
+import 'package:spendify/presentation/screens/home_screen.dart';
+import 'package:spendify/presentation/screens/settings_screen.dart';
 
 import '../support/widget_test_scaffold.dart';
 
@@ -38,7 +38,7 @@ Future<void> _tapItem(WidgetTester tester, String text) async {
 void main() {
   group('AI toggle', () {
     testWidgets('off (denied) hides the scan FAB and Insights', (tester) async {
-      await pumpSpendly(
+      await pumpSpendify(
         tester,
         home: const HomeScreen(),
         geminiApiKey: 'test-key',
@@ -54,7 +54,7 @@ void main() {
     testWidgets('turning it on in Settings reveals the AI entry points', (
       tester,
     ) async {
-      final repos = await pumpSpendly(
+      final repos = await pumpSpendify(
         tester,
         home: const HomeScreen(),
         geminiApiKey: 'test-key',
@@ -88,7 +88,7 @@ void main() {
     });
 
     testWidgets('no key -> AI row is disabled, no toggle', (tester) async {
-      await pumpSpendly(tester, home: const SettingsScreen());
+      await pumpSpendify(tester, home: const SettingsScreen());
       expect(find.widgetWithText(SwitchListTile, 'AI features'), findsNothing);
       expect(
         find.textContaining('Not available in this build'),
@@ -98,7 +98,7 @@ void main() {
   });
 
   testWidgets('Clear cached advice empties the cache', (tester) async {
-    final repos = await pumpSpendly(
+    final repos = await pumpSpendify(
       tester,
       home: const SettingsScreen(),
       geminiApiKey: 'test-key',
@@ -123,7 +123,7 @@ void main() {
   testWidgets('Delete all local data wipes the fakes and pops home', (
     tester,
   ) async {
-    final repos = await pumpSpendly(
+    final repos = await pumpSpendify(
       tester,
       home: const _SettingsHost(),
       geminiApiKey: 'test-key',
@@ -149,7 +149,7 @@ void main() {
   testWidgets('Export my data shows a dialog with a copy action', (
     tester,
   ) async {
-    final repos = await pumpSpendly(
+    final repos = await pumpSpendify(
       tester,
       home: const SettingsScreen(),
       geminiApiKey: 'test-key',
@@ -166,17 +166,17 @@ void main() {
   });
 
   testWidgets('privacy notice opens from settings', (tester) async {
-    await pumpSpendly(
+    await pumpSpendify(
       tester,
       home: const SettingsScreen(),
       geminiApiKey: 'test-key',
     );
     await _tapItem(tester, 'Privacy notice');
-    expect(find.text('Spendly privacy notice'), findsOneWidget);
+    expect(find.text('Spendify privacy notice'), findsOneWidget);
   });
 
   testWidgets('"what is sent" shows the real advice payload', (tester) async {
-    await pumpSpendly(
+    await pumpSpendify(
       tester,
       home: const SettingsScreen(),
       geminiApiKey: 'test-key',

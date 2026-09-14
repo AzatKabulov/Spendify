@@ -1,12 +1,12 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/domain/entities/budget.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/domain/entities/period_aggregate.dart';
-import 'package:spendly/domain/entities/transaction.dart';
-import 'package:spendly/domain/services/aggregation_service.dart';
-import 'package:spendly/domain/services/budget_evaluator.dart';
+import 'package:spendify/domain/entities/budget.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/domain/entities/period_aggregate.dart';
+import 'package:spendify/domain/entities/transaction.dart';
+import 'package:spendify/domain/services/aggregation_service.dart';
+import 'package:spendify/domain/services/budget_evaluator.dart';
 
 /// Trust-but-verify for the two budget-evaluation paths that coexist by design:
 ///

@@ -4,8 +4,8 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:spendly/data/remote/gemini_client.dart';
-import 'package:spendly/domain/repositories/receipt_scanner_repository.dart';
+import 'package:spendify/data/remote/gemini_client.dart';
+import 'package:spendify/domain/repositories/receipt_scanner_repository.dart';
 
 final _bytes = Uint8List.fromList(List<int>.filled(64, 7));
 

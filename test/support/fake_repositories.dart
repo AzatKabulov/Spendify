@@ -1,29 +1,29 @@
 import 'dart:async';
 
-import 'package:spendly/core/clock.dart';
-import 'package:spendly/data/repositories/default_categories.dart';
-import 'package:spendly/data/repositories/local_data_wiper.dart';
-import 'package:spendly/domain/entities/advice_item.dart';
-import 'package:spendly/domain/entities/advice_record.dart';
-import 'package:spendly/domain/entities/ai_consent.dart';
-import 'package:spendly/domain/entities/budget.dart';
-import 'package:spendly/domain/entities/category.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/domain/entities/gamification_state.dart';
-import 'package:spendly/domain/entities/period_aggregate.dart';
-import 'package:spendly/domain/entities/syncable.dart';
-import 'package:spendly/domain/entities/transaction.dart';
-import 'package:spendly/domain/repositories/advice_generator_repository.dart';
-import 'package:spendly/domain/repositories/advice_record_repository.dart';
-import 'package:spendly/domain/repositories/auth_repository.dart';
-import 'package:spendly/domain/repositories/budget_repository.dart';
-import 'package:spendly/domain/repositories/category_repository.dart';
-import 'package:spendly/domain/repositories/gamification_state_repository.dart';
-import 'package:spendly/domain/repositories/period_aggregate_repository.dart';
-import 'package:spendly/domain/repositories/transaction_repository.dart';
-import 'package:spendly/domain/services/advice_summary_builder.dart';
-import 'package:spendly/data/local/ai_preferences_store.dart';
-import 'package:spendly/data/local/app_preferences.dart';
+import 'package:spendify/core/clock.dart';
+import 'package:spendify/data/repositories/default_categories.dart';
+import 'package:spendify/data/repositories/local_data_wiper.dart';
+import 'package:spendify/domain/entities/advice_item.dart';
+import 'package:spendify/domain/entities/advice_record.dart';
+import 'package:spendify/domain/entities/ai_consent.dart';
+import 'package:spendify/domain/entities/budget.dart';
+import 'package:spendify/domain/entities/category.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/domain/entities/gamification_state.dart';
+import 'package:spendify/domain/entities/period_aggregate.dart';
+import 'package:spendify/domain/entities/syncable.dart';
+import 'package:spendify/domain/entities/transaction.dart';
+import 'package:spendify/domain/repositories/advice_generator_repository.dart';
+import 'package:spendify/domain/repositories/advice_record_repository.dart';
+import 'package:spendify/domain/repositories/auth_repository.dart';
+import 'package:spendify/domain/repositories/budget_repository.dart';
+import 'package:spendify/domain/repositories/category_repository.dart';
+import 'package:spendify/domain/repositories/gamification_state_repository.dart';
+import 'package:spendify/domain/repositories/period_aggregate_repository.dart';
+import 'package:spendify/domain/repositories/transaction_repository.dart';
+import 'package:spendify/domain/services/advice_summary_builder.dart';
+import 'package:spendify/data/local/ai_preferences_store.dart';
+import 'package:spendify/data/local/app_preferences.dart';
 
 /// In-memory synchronous stand-ins for the Hive repositories, for widget tests.
 /// They apply the same CLAUDE.md §8 mutation rules as the real base repo, minus

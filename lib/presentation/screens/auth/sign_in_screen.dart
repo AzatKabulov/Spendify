@@ -144,7 +144,7 @@ class _Header extends StatelessWidget {
           color: theme.colorScheme.primary,
         ),
         const SizedBox(height: 12),
-        Text('Spendly', style: theme.textTheme.headlineMedium),
+        Text('Spendify', style: theme.textTheme.headlineMedium),
         const SizedBox(height: 4),
         Text(
           'Sign in to sync your budget',

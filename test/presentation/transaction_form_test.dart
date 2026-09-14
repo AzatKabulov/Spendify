@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/presentation/screens/transaction_form_screen.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/presentation/screens/transaction_form_screen.dart';
 
 import '../support/widget_test_scaffold.dart';
 
@@ -17,7 +17,7 @@ void main() {
   Finder saveButton() => find.widgetWithText(FilledButton, 'Add transaction');
 
   testWidgets('rejects an empty amount', (tester) async {
-    await pumpSpendly(tester, home: const TransactionFormScreen());
+    await pumpSpendify(tester, home: const TransactionFormScreen());
 
     await tester.tap(saveButton());
     await tester.pumpAndSettle();
@@ -26,7 +26,7 @@ void main() {
   });
 
   testWidgets('rejects a zero amount', (tester) async {
-    await pumpSpendly(tester, home: const TransactionFormScreen());
+    await pumpSpendify(tester, home: const TransactionFormScreen());
 
     await enterAmount(tester, '0');
     await tester.tap(saveButton());
@@ -36,7 +36,7 @@ void main() {
   });
 
   testWidgets('rejects an unparseable amount (>2 dp)', (tester) async {
-    await pumpSpendly(tester, home: const TransactionFormScreen());
+    await pumpSpendify(tester, home: const TransactionFormScreen());
 
     await enterAmount(tester, '12.999');
     await tester.tap(saveButton());
@@ -46,7 +46,7 @@ void main() {
   });
 
   testWidgets('saves a valid transaction and pops', (tester) async {
-    final repos = await pumpSpendly(tester, home: const _FormHost());
+    final repos = await pumpSpendify(tester, home: const _FormHost());
 
     await tester.tap(find.text('open form'));
     await tester.pumpAndSettle();
@@ -70,7 +70,7 @@ void main() {
   });
 
   testWidgets('note is optional — saves with a null note', (tester) async {
-    final repos = await pumpSpendly(tester, home: const _FormHost());
+    final repos = await pumpSpendify(tester, home: const _FormHost());
     await tester.tap(find.text('open form'));
     await tester.pumpAndSettle();
 
@@ -87,7 +87,7 @@ void main() {
   });
 
   testWidgets('remembers the chosen category as last-used', (tester) async {
-    final repos = await pumpSpendly(tester, home: const _FormHost());
+    final repos = await pumpSpendify(tester, home: const _FormHost());
     await tester.tap(find.text('open form'));
     await tester.pumpAndSettle();
 

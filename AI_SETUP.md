@@ -7,7 +7,7 @@ no second key or second client to configure. **The key must never be
 committed** (CLAUDE.md §8).
 
 Without the key: the "Scan receipt" button and the "Insights" menu entry simply
-don't appear. Everything else in Spendly works.
+don't appear. Everything else in Spendify works.
 
 ## Key placement — decide this with your supervisor (CLAUDE.md §9)
 

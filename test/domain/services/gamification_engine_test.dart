@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/domain/entities/gamification_state.dart';
-import 'package:spendly/domain/services/gamification_engine.dart';
-import 'package:spendly/domain/services/gamification_rules.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/domain/entities/gamification_state.dart';
+import 'package:spendify/domain/services/gamification_engine.dart';
+import 'package:spendify/domain/services/gamification_rules.dart';
 
 const _engine = GamificationEngine();
 

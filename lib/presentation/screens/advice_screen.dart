@@ -61,7 +61,7 @@ class _AdviceScreenState extends ConsumerState<AdviceScreen> {
           title: 'AI insights are off',
           body:
               'Turn on AI features in Settings → Privacy & AI to get advice '
-              'from your spending. The rest of Spendly works without it.',
+              'from your spending. The rest of Spendify works without it.',
         ),
         AdvicePhase.notEnoughData => _Centered(
           icon: Icons.eco_outlined,
@@ -76,7 +76,7 @@ class _AdviceScreenState extends ConsumerState<AdviceScreen> {
           title: 'You’re offline',
           body:
               'Connect to the internet to get your first insights. Everything '
-              'else in Spendly works offline.',
+              'else in Spendify works offline.',
           onRetry: _refresh,
         ),
         AdvicePhase.emptyError => _Centered(

@@ -40,8 +40,8 @@ class AiConsentScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Spendly can use Google Gemini for two things. Both are '
-                    'optional — everything else in Spendly works without them, '
+                    'Spendify can use Google Gemini for two things. Both are '
+                    'optional — everything else in Spendify works without them, '
                     'offline.',
                     style: theme.textTheme.bodyMedium,
                   ),

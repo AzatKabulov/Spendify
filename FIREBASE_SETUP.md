@@ -17,7 +17,7 @@ gitignored, like `google-services.json`).
 
 1. Go to <https://console.firebase.google.com> and sign in with any Google
    account.
-2. **Add project** → name it `spendly` (or anything) → **disable** Google
+2. **Add project** → name it `spendify` (or anything) → **disable** Google
    Analytics (not used) → **Create project**.
 
 You're on the free **Spark** plan by default — that's all Auth + Firestore
@@ -78,7 +78,7 @@ flutterfire configure --project=<your-project-id> --platforms=android
 ```
 
 `<your-project-id>` is the id shown top-left in the console under the project
-name (e.g. `spendly-a1b2c`) — not the display name you typed in step 1. Pick
+name (e.g. `spendify-a1b2c`) — not the display name you typed in step 1. Pick
 **register a new Android app** when prompted; the package name is
 `com.azatkabulov.spendly`. This:
 

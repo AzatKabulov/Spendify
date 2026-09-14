@@ -1,4 +1,4 @@
-# Spendly — Usability Test Protocol (Phase 11, Part D)
+# Spendify — Usability Test Protocol (Phase 11, Part D)
 
 Purpose: measure NFR 4 (`CLAUDE.md §6`) —
 
@@ -100,7 +100,7 @@ Record the device model + Android version + the printed table.
 ## 5. Results Sheet — print one per participant
 
 ```
-SPENDLY USABILITY TEST — RESULTS SHEET
+SPENDIFY USABILITY TEST — RESULTS SHEET
 
 Participant ID:  P____        Date: __________      Facilitator: __________
 Age band:  [ ] 18–21   [ ] 22–25   [ ] 26–30       Device: ____________________
@@ -158,26 +158,26 @@ POST-TASK QUESTIONS
 > 1 = Strongly disagree … 5 = Strongly agree.
 
 ```
-SPENDLY — SYSTEM USABILITY SCALE                    Participant P____   Date ______
+SPENDIFY — SYSTEM USABILITY SCALE                    Participant P____   Date ______
 
                                                    SD                     SA
                                                     1     2     3     4     5
- 1. I think I would like to use Spendly            [ ]   [ ]   [ ]   [ ]   [ ]
+ 1. I think I would like to use Spendify            [ ]   [ ]   [ ]   [ ]   [ ]
     frequently.
- 2. I found Spendly unnecessarily complex.         [ ]   [ ]   [ ]   [ ]   [ ]
- 3. I thought Spendly was easy to use.             [ ]   [ ]   [ ]   [ ]   [ ]
+ 2. I found Spendify unnecessarily complex.         [ ]   [ ]   [ ]   [ ]   [ ]
+ 3. I thought Spendify was easy to use.             [ ]   [ ]   [ ]   [ ]   [ ]
  4. I think I would need the support of a          [ ]   [ ]   [ ]   [ ]   [ ]
-    technical person to use Spendly.
- 5. I found the various functions in Spendly       [ ]   [ ]   [ ]   [ ]   [ ]
+    technical person to use Spendify.
+ 5. I found the various functions in Spendify       [ ]   [ ]   [ ]   [ ]   [ ]
     were well integrated.
  6. I thought there was too much inconsistency     [ ]   [ ]   [ ]   [ ]   [ ]
-    in Spendly.
+    in Spendify.
  7. I would imagine that most people would learn   [ ]   [ ]   [ ]   [ ]   [ ]
-    to use Spendly very quickly.
- 8. I found Spendly very cumbersome to use.        [ ]   [ ]   [ ]   [ ]   [ ]
- 9. I felt very confident using Spendly.           [ ]   [ ]   [ ]   [ ]   [ ]
+    to use Spendify very quickly.
+ 8. I found Spendify very cumbersome to use.        [ ]   [ ]   [ ]   [ ]   [ ]
+ 9. I felt very confident using Spendify.           [ ]   [ ]   [ ]   [ ]   [ ]
 10. I needed to learn a lot of things before I     [ ]   [ ]   [ ]   [ ]   [ ]
-    could get going with Spendly.
+    could get going with Spendify.
 
 Optional comment: _______________________________________________________
 ```
@@ -223,7 +223,7 @@ Keep raw sheets and recordings — they are citable primary evidence for CP2.
 ## Appendix — consent slip (optional, print if your ethics process wants it)
 
 ```
-I agree to take part in a usability test of the Spendly app for a university
+I agree to take part in a usability test of the Spendify app for a university
 capstone project. I understand:
  - the app is being tested, not me;
  - I can stop at any time;

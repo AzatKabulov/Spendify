@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/core/constants.dart';
-import 'package:spendly/data/repositories/default_categories.dart';
-import 'package:spendly/data/repositories/hive_category_repository.dart';
-import 'package:spendly/domain/entities/category.dart';
-import 'package:spendly/domain/entities/enums.dart';
+import 'package:spendify/core/constants.dart';
+import 'package:spendify/data/repositories/default_categories.dart';
+import 'package:spendify/data/repositories/hive_category_repository.dart';
+import 'package:spendify/domain/entities/category.dart';
+import 'package:spendify/domain/entities/enums.dart';
 
 import '../../support/hive_test_harness.dart';
 

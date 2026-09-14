@@ -1,4 +1,4 @@
-# Spendly — Security Audit & Remediation (Phase 12)
+# Spendify — Security Audit & Remediation (Phase 12)
 
 A full read-only security/architecture audit of the codebase, run against
 commit `a5bee9e`, followed by the fixes it led to. Kept as CP2 evidence that a

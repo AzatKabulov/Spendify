@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/core/constants.dart';
-import 'package:spendly/core/theme/app_theme.dart';
-import 'package:spendly/data/repositories/aggregation_maintenance.dart';
-import 'package:spendly/domain/entities/ai_consent.dart';
-import 'package:spendly/domain/entities/transaction.dart';
-import 'package:spendly/presentation/providers/advice_providers.dart';
-import 'package:spendly/presentation/providers/ai_providers.dart';
-import 'package:spendly/presentation/providers/auth_providers.dart';
-import 'package:spendly/presentation/providers/privacy_providers.dart';
-import 'package:spendly/presentation/providers/repository_providers.dart';
-import 'package:spendly/presentation/providers/sync_providers.dart';
+import 'package:spendify/core/constants.dart';
+import 'package:spendify/core/theme/app_theme.dart';
+import 'package:spendify/data/repositories/aggregation_maintenance.dart';
+import 'package:spendify/domain/entities/ai_consent.dart';
+import 'package:spendify/domain/entities/transaction.dart';
+import 'package:spendify/presentation/providers/advice_providers.dart';
+import 'package:spendify/presentation/providers/ai_providers.dart';
+import 'package:spendify/presentation/providers/auth_providers.dart';
+import 'package:spendify/presentation/providers/privacy_providers.dart';
+import 'package:spendify/presentation/providers/repository_providers.dart';
+import 'package:spendify/presentation/providers/sync_providers.dart';
 
 import 'fake_repositories.dart';
 import 'fake_sync.dart';
@@ -66,7 +66,7 @@ class TestRepos {
 ///
 /// Storage clock is pinned to 2026-09-08 12:00 UTC; the local ("now") clock is
 /// pinned to [now] (default 2026-09-15, a Tuesday). New ids are `id-0`, `id-1`…
-Future<TestRepos> pumpSpendly(
+Future<TestRepos> pumpSpendify(
   WidgetTester tester, {
   required Widget home,
   DateTime? now,

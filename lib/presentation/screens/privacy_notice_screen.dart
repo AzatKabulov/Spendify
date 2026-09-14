@@ -15,7 +15,7 @@ class PrivacyNoticeScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
         children: <Widget>[
-          Text('Spendly privacy notice', style: theme.textTheme.headlineSmall),
+          Text('Spendify privacy notice', style: theme.textTheme.headlineSmall),
           const SizedBox(height: 4),
           Text(
             'Last updated: September 2026',

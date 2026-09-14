@@ -1,4 +1,4 @@
-# Spendly R8/ProGuard keep rules (Phase 12).
+# Spendify R8/ProGuard keep rules (Phase 12).
 #
 # Flutter's own default rules (bundled with the Gradle plugin) already cover the
 # engine and embedding. These are the app-specific additions.
@@ -15,7 +15,7 @@
 # if a TypeAdapter ever moves to reflection, add its keep here.
 
 # --- Firebase (Auth + Firestore) ----------------------------------------
-# Firestore serialises model classes via reflection. Spendly only ever writes
+# Firestore serialises model classes via reflection. Spendify only ever writes
 # Map<String,Object?> (see data/remote/firestore_mappers.dart), so no app model
 # is reflected — but keep Firebase's own annotated types and enum valueOf().
 -keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod

@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/core/constants.dart';
-import 'package:spendly/domain/entities/enums.dart';
-import 'package:spendly/domain/entities/transaction.dart';
-import 'package:spendly/presentation/providers/report_providers.dart';
-import 'package:spendly/presentation/screens/reports_screen.dart';
+import 'package:spendify/core/constants.dart';
+import 'package:spendify/domain/entities/enums.dart';
+import 'package:spendify/domain/entities/transaction.dart';
+import 'package:spendify/presentation/providers/report_providers.dart';
+import 'package:spendify/presentation/screens/reports_screen.dart';
 
 import '../support/widget_test_scaffold.dart';
 
@@ -30,8 +30,8 @@ void main() {
   testWidgets(
     'monthly: one bar per calendar day, expense-only, in-period-only',
     (tester) async {
-      // pumpSpendly pins "now" to 2026-09-15 -> monthly view of September 2026.
-      final repos = await pumpSpendly(tester, home: const ReportsScreen());
+      // pumpSpendify pins "now" to 2026-09-15 -> monthly view of September 2026.
+      final repos = await pumpSpendify(tester, home: const ReportsScreen());
 
       await repos.seedTransaction(_exp('a', 5000, DateTime(2026, 9, 3)));
       await repos.seedTransaction(
@@ -80,7 +80,7 @@ void main() {
   testWidgets('weekly: 7 bars for the Mon–Sun window, from daily aggregates', (
     tester,
   ) async {
-    final repos = await pumpSpendly(tester, home: const ReportsScreen());
+    final repos = await pumpSpendify(tester, home: const ReportsScreen());
 
     // 2026-09-15 is a Tuesday -> ISO week 38 -> Mon 14 Sep .. Sun 20 Sep.
     await repos.seedTransaction(_exp('t', 2500, DateTime(2026, 9, 15)));
@@ -119,7 +119,7 @@ void main() {
   testWidgets('editing a transaction moves its bar to the new day', (
     tester,
   ) async {
-    final repos = await pumpSpendly(tester, home: const ReportsScreen());
+    final repos = await pumpSpendify(tester, home: const ReportsScreen());
     final saved = await repos.seedTransaction(
       _exp('m', 6000, DateTime(2026, 9, 10)),
     );

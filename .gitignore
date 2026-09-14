@@ -33,7 +33,7 @@ migrate_working_dir/
 /build/
 /coverage/
 
-# === Spendly secrets — never commit (CLAUDE.md §8) ===
+# === Spendify secrets — never commit (CLAUDE.md §8) ===
 # Firebase config (added in Phase 5) — kept local; regenerate with
 # `flutterfire configure` (see FIREBASE_SETUP.md)
 **/google-services.json

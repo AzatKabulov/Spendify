@@ -1,9 +1,9 @@
-# Spendly
+# Spendify
 
 **AI-powered, offline-first Android budgeting app for students and young adults
 in Malaysia.** Final-year capstone project (Capstone Project 2).
 
-Spendly automates expense recording with AI receipt scanning, works fully
+Spendify automates expense recording with AI receipt scanning, works fully
 offline for every core feature, and uses gamification plus AI-generated advice
 to sustain long-term engagement — without the compulsive-checking patterns that
 usually come with it.
@@ -151,7 +151,7 @@ Regenerating the keystore: see [docs/RELEASE.md](docs/RELEASE.md).
 | Doc | What |
 |---|---|
 | [CLAUDE.md](CLAUDE.md) | authoritative project brief + open decisions |
-| [SPENDLY_BUILD_PLAN.md](SPENDLY_BUILD_PLAN.md) | phase-by-phase build plan |
+| [SPENDIFY_BUILD_PLAN.md](SPENDIFY_BUILD_PLAN.md) | phase-by-phase build plan |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | layers, components, data flow, diagram |
 | [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md) | NFR evidence pack (CP2 §3.2.2) |
 | [docs/SECURITY_AUDIT.md](docs/SECURITY_AUDIT.md) | full security/architecture audit + fixes applied |

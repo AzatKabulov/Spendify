@@ -1,16 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/data/remote/gemini_advice_client.dart';
-import 'package:spendly/data/remote/gemini_client.dart';
-import 'package:spendly/data/repositories/unavailable_advice_generator.dart';
-import 'package:spendly/data/repositories/unavailable_receipt_scanner.dart';
-import 'package:spendly/domain/entities/ai_consent.dart';
-import 'package:spendly/presentation/providers/advice_providers.dart';
-import 'package:spendly/presentation/providers/ai_providers.dart';
-import 'package:spendly/presentation/providers/receipt_scan_providers.dart';
-import 'package:spendly/presentation/screens/ai_consent_screen.dart';
-import 'package:spendly/presentation/screens/auth/auth_gate.dart';
-import 'package:spendly/presentation/screens/home_screen.dart';
+import 'package:spendify/data/remote/gemini_advice_client.dart';
+import 'package:spendify/data/remote/gemini_client.dart';
+import 'package:spendify/data/repositories/unavailable_advice_generator.dart';
+import 'package:spendify/data/repositories/unavailable_receipt_scanner.dart';
+import 'package:spendify/domain/entities/ai_consent.dart';
+import 'package:spendify/presentation/providers/advice_providers.dart';
+import 'package:spendify/presentation/providers/ai_providers.dart';
+import 'package:spendify/presentation/providers/receipt_scan_providers.dart';
+import 'package:spendify/presentation/screens/ai_consent_screen.dart';
+import 'package:spendify/presentation/screens/auth/auth_gate.dart';
+import 'package:spendify/presentation/screens/home_screen.dart';
 
 import '../support/fake_repositories.dart';
 import '../support/widget_test_scaffold.dart';
@@ -111,7 +111,7 @@ void main() {
     testWidgets('key present + undecided -> consent screen before home', (
       tester,
     ) async {
-      await pumpSpendly(
+      await pumpSpendify(
         tester,
         home: const AuthGate(),
         signedInSession: true,
@@ -125,7 +125,7 @@ void main() {
     testWidgets('declining consent -> straight to home, AI stays off', (
       tester,
     ) async {
-      final repos = await pumpSpendly(
+      final repos = await pumpSpendify(
         tester,
         home: const AuthGate(),
         signedInSession: true,
@@ -142,7 +142,7 @@ void main() {
     });
 
     testWidgets('accepting consent -> home, AI enabled', (tester) async {
-      final repos = await pumpSpendly(
+      final repos = await pumpSpendify(
         tester,
         home: const AuthGate(),
         signedInSession: true,
@@ -160,7 +160,7 @@ void main() {
     testWidgets('no key -> no consent screen, straight to home', (
       tester,
     ) async {
-      await pumpSpendly(
+      await pumpSpendify(
         tester,
         home: const AuthGate(),
         signedInSession: true,

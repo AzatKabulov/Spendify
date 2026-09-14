@@ -1,4 +1,4 @@
-# Spendly — Project Context for Claude Code
+# Spendify — Project Context for Claude Code
 
 Read this fully before writing any code. It is the authoritative brief for this project.
 
@@ -6,7 +6,7 @@ Read this fully before writing any code. It is the authoritative brief for this 
 
 ## 1. What this is, and the constraint that matters most
 
-Spendly is an AI-powered Android budgeting app for students and young adults in Malaysia. It automates expense recording via AI receipt scanning, works fully offline for all core features, and uses gamification plus AI-generated advice to sustain long-term engagement.
+Spendify is an AI-powered Android budgeting app for students and young adults in Malaysia. It automates expense recording via AI receipt scanning, works fully offline for all core features, and uses gamification plus AI-generated advice to sustain long-term engagement.
 
 **This is a university capstone project (FYP / Capstone Project 2).** A proposal has already been written, submitted and graded. The code must match what that document promised. This changes how you should behave:
 
@@ -14,7 +14,7 @@ Spendly is an AI-powered Android budgeting app for students and young adults in 
 - **If you think something in this brief is wrong or will not work, raise it before building, not after.** A flagged deviation with reasoning is fine. An unflagged one creates a mismatch between the code and a submitted document.
 - Several constraints below look like ordinary preferences but are actually written commitments in a graded report. They are marked **[REPORT COMMITMENT]**. Treat those as non-negotiable.
 
-The full phase-by-phase build plan lives in `SPENDLY_BUILD_PLAN.md`. Work one phase at a time.
+The full phase-by-phase build plan lives in `SPENDIFY_BUILD_PLAN.md`. Work one phase at a time.
 
 ---
 
@@ -352,7 +352,7 @@ flutter clean && flutter build apk --release              # release build — `c
 
 ## 11. Working rhythm
 
-One phase per session, following `SPENDLY_BUILD_PLAN.md`:
+One phase per session, following `SPENDIFY_BUILD_PLAN.md`:
 
 1. State which phase is starting
 2. Build it

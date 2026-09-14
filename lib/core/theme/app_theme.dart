@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'insets.dart';
 
-/// The single source of truth for Spendly's look (Phase 12). One seed colour,
+/// The single source of truth for Spendify's look (Phase 12). One seed colour,
 /// Material 3, component themes so widgets don't re-specify shape/padding.
 ///
 /// Light only for now — a half-finished dark theme is worse than none

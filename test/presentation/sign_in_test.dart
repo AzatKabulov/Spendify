@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spendly/data/remote/firebase_bootstrap.dart';
-import 'package:spendly/domain/repositories/auth_repository.dart';
-import 'package:spendly/presentation/providers/auth_providers.dart';
-import 'package:spendly/presentation/screens/auth/sign_in_screen.dart';
+import 'package:spendify/data/remote/firebase_bootstrap.dart';
+import 'package:spendify/domain/repositories/auth_repository.dart';
+import 'package:spendify/presentation/providers/auth_providers.dart';
+import 'package:spendify/presentation/screens/auth/sign_in_screen.dart';
 
 import '../support/fake_repositories.dart';
 
