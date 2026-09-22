@@ -25,7 +25,7 @@ Transaction sampleTxn({
 void main() {
   testWidgets('empty state shows before any transaction', (tester) async {
     await pumpSpendify(tester, home: const HomeScreen());
-    expect(find.text('No transactions yet'), findsOneWidget);
+    expect(find.textContaining('Nothing here yet'), findsOneWidget);
   });
 
   testWidgets('a seeded transaction appears in the list', (tester) async {
@@ -34,7 +34,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Lunch canary'), findsOneWidget);
-    expect(find.text('No transactions yet'), findsNothing);
+    expect(find.textContaining('Nothing here yet'), findsNothing);
   });
 
   testWidgets('swipe deletes the row; UNDO restores it', (tester) async {
@@ -89,7 +89,7 @@ void main() {
     await tester.tap(find.textContaining('Lunch canary'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Edit transaction'), findsOneWidget);
+    expect(find.text('Edit Transaction'), findsOneWidget);
     expect(find.text('42.00'), findsOneWidget); // amount pre-filled
   });
 }

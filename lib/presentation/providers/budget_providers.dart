@@ -128,6 +128,7 @@ class BudgetActions {
     required String? categoryId,
     required int limitAmountMinor,
     required BudgetPeriod period,
+    DateTime? startDate,
   }) async {
     final now = clock();
     final saved = await _repo.add(
@@ -137,7 +138,7 @@ class BudgetActions {
         categoryId: categoryId,
         limitAmountMinor: limitAmountMinor,
         period: period,
-        startDate: now,
+        startDate: startDate ?? now,
         now: now,
       ),
     );
@@ -150,12 +151,14 @@ class BudgetActions {
     required String? categoryId,
     required int limitAmountMinor,
     required BudgetPeriod period,
+    DateTime? startDate,
   }) {
     return _repo.update(
       original.copyWith(
         categoryId: patch(categoryId),
         limitAmountMinor: limitAmountMinor,
         period: period,
+        startDate: startDate,
       ),
     );
   }

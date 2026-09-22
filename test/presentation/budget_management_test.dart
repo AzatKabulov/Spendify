@@ -75,7 +75,7 @@ void main() {
   testWidgets('creates a valid budget and lists it', (tester) async {
     final repos = await pumpSpendify(tester, home: const BudgetsScreen());
 
-    await tester.tap(find.widgetWithText(FloatingActionButton, 'New'));
+    await tester.tap(find.byTooltip('New budget'));
     await tester.pumpAndSettle();
     await tester.enterText(find.widgetWithText(TextFormField, 'Limit'), '500');
     await tester.tap(find.widgetWithText(FilledButton, 'Create'));
@@ -96,7 +96,7 @@ void main() {
     await repos.seedTransaction(sepExpense('e1', 6000));
     await tester.pumpAndSettle();
     // 60% used -> safe, no banner
-    expect(find.textContaining('budget'), findsNothing);
+    expect(find.textContaining('over its monthly limit'), findsNothing);
 
     await repos.seedTransaction(sepExpense('e2', 5000)); // now 110%
     await tester.pumpAndSettle();

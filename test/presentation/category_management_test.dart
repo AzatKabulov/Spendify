@@ -29,7 +29,7 @@ void main() {
   testWidgets('creates a new category', (tester) async {
     final repos = await pumpSpendify(tester, home: const CategoriesScreen());
 
-    await tester.tap(find.widgetWithText(FloatingActionButton, 'New'));
+    await tester.tap(find.text('Create Custom Category'));
     await tester.pumpAndSettle();
 
     await tester.enterText(
