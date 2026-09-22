@@ -13,7 +13,13 @@ library;
 abstract interface class AuthRepository {
   /// Create an account, persist the session locally, and return the new UID.
   /// Throws [AuthException] on failure (already-in-use, weak password, offline…).
-  Future<String> signUp({required String email, required String password});
+  /// [displayName], if given, is set best-effort on the Firebase profile — a
+  /// failure to set it never fails account creation.
+  Future<String> signUp({
+    required String email,
+    required String password,
+    String? displayName,
+  });
 
   /// Sign in, persist the session locally, and return the UID.
   /// Throws [AuthException] on failure.
@@ -34,6 +40,9 @@ abstract interface class AuthRepository {
   /// The signed-in user's email from local storage (shown in Settings while
   /// offline), or `null` if signed out.
   String? get currentUserEmail;
+
+  /// The signed-in user's display name from local storage, if they set one.
+  String? get currentUserDisplayName;
 }
 
 /// Every failure the auth layer can surface, each with a specific, user-facing

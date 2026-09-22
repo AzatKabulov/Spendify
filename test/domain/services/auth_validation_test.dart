@@ -50,4 +50,32 @@ void main() {
       expect(credentialsLookValid(null, null), isFalse);
     });
   });
+
+  group('validateFullName', () {
+    test('accepts a non-empty name', () {
+      expect(validateFullName('Lara'), isNull);
+      expect(validateFullName('  Lara Ahmad  '), isNull);
+    });
+
+    test('rejects empty or blank', () {
+      expect(validateFullName(''), isNotNull);
+      expect(validateFullName(null), isNotNull);
+      expect(validateFullName('   '), isNotNull);
+    });
+  });
+
+  group('validatePasswordConfirmation', () {
+    test('accepts a match', () {
+      expect(validatePasswordConfirmation('secret1', 'secret1'), isNull);
+    });
+
+    test('rejects a mismatch', () {
+      expect(validatePasswordConfirmation('secret1', 'secret2'), isNotNull);
+    });
+
+    test('rejects a confirmation that fails the base password rule first', () {
+      expect(validatePasswordConfirmation('secret1', ''), isNotNull);
+      expect(validatePasswordConfirmation('secret1', 'no'), isNotNull);
+    });
+  });
 }

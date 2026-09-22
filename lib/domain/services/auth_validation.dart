@@ -34,3 +34,22 @@ String? validatePassword(String? password) {
 /// `true` when both fields pass — used to enable/disable the submit button.
 bool credentialsLookValid(String? email, String? password) =>
     validateEmail(email) == null && validatePassword(password) == null;
+
+/// Returns a user-facing error message, or `null` if [name] is acceptable.
+/// Used only for the sign-up display name — Firebase itself does not
+/// validate this field.
+String? validateFullName(String? name) {
+  final value = name?.trim() ?? '';
+  if (value.isEmpty) return 'Enter your name.';
+  return null;
+}
+
+/// Returns a user-facing error message, or `null` if [confirmation] is a
+/// valid password that matches [password]. Checked client-side only —
+/// Firebase never sees the confirmation field.
+String? validatePasswordConfirmation(String? password, String? confirmation) {
+  final base = validatePassword(confirmation);
+  if (base != null) return base;
+  if (confirmation != password) return 'Passwords do not match.';
+  return null;
+}

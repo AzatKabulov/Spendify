@@ -46,6 +46,7 @@ void main() {
     auth.gate = Completer<void>(); // hold the request open
 
     await _enterCredentials(tester);
+    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Sign in'));
     await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
     await tester.pump(); // start the async submit
 
@@ -80,6 +81,7 @@ void main() {
     auth.failWith = const InvalidCredentialsException();
 
     await _enterCredentials(tester);
+    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Sign in'));
     await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
     await tester.pumpAndSettle();
 
@@ -102,6 +104,7 @@ void main() {
       find.widgetWithText(TextFormField, 'Password'),
       'secret123',
     );
+    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Sign in'));
     await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
     await tester.pumpAndSettle();
 

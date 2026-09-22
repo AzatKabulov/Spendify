@@ -64,9 +64,13 @@ class FirebaseAuthRepository implements AuthRepository {
   String? get currentUserEmail => _cached?.email;
 
   @override
+  String? get currentUserDisplayName => _cached?.displayName;
+
+  @override
   Future<String> signUp({
     required String email,
     required String password,
+    String? displayName,
   }) async {
     final credential = await _run(
       () => _auth.createUserWithEmailAndPassword(
@@ -74,7 +78,20 @@ class FirebaseAuthRepository implements AuthRepository {
         password: password,
       ),
     );
-    return _persist(credential, fallbackEmail: email.trim());
+    final name = displayName?.trim();
+    if (name != null && name.isNotEmpty) {
+      // Best-effort — the account already exists at this point, so a failure
+      // here (e.g. a dropped connection right after signup) must not surface
+      // as a signup failure.
+      try {
+        await credential.user?.updateDisplayName(name);
+      } catch (error) {
+        if (!kReleaseMode) {
+          debugPrint('AUTH: updateDisplayName failed (ignored): $error');
+        }
+      }
+    }
+    return _persist(credential, fallbackEmail: email.trim(), displayName: name);
   }
 
   @override
@@ -140,6 +157,7 @@ class FirebaseAuthRepository implements AuthRepository {
   Future<String> _persist(
     UserCredential credential, {
     required String fallbackEmail,
+    String? displayName,
   }) async {
     final user = credential.user;
     if (user == null) {
@@ -148,6 +166,7 @@ class FirebaseAuthRepository implements AuthRepository {
     final session = AuthSession(
       uid: user.uid,
       email: user.email ?? fallbackEmail,
+      displayName: user.displayName ?? displayName,
     );
     await _sessions.write(session);
     _cached = session;

@@ -6,17 +6,23 @@ import '../../core/constants.dart';
 /// routing consults (CLAUDE.md §3 / §6: the session decision must be answerable
 /// from local state alone, never a `FirebaseAuth` stream that can hang offline).
 class AuthSession {
-  const AuthSession({required this.uid, this.email});
+  const AuthSession({required this.uid, this.email, this.displayName});
 
   final String uid;
   final String? email;
 
-  @override
-  bool operator ==(Object other) =>
-      other is AuthSession && other.uid == uid && other.email == email;
+  /// The name shown in the home greeting (Firebase display name), if any.
+  final String? displayName;
 
   @override
-  int get hashCode => Object.hash(uid, email);
+  bool operator ==(Object other) =>
+      other is AuthSession &&
+      other.uid == uid &&
+      other.email == email &&
+      other.displayName == displayName;
+
+  @override
+  int get hashCode => Object.hash(uid, email, displayName);
 
   @override
   String toString() => 'AuthSession($uid, ${email ?? "<no email>"})';
@@ -42,7 +48,8 @@ class SecureStorageAuthSessionStore implements AuthSessionStore {
     final uid = await _storage.read(key: kAuthUidKeyName);
     if (uid == null || uid.isEmpty) return null;
     final email = await _storage.read(key: kAuthEmailKeyName);
-    return AuthSession(uid: uid, email: email);
+    final name = await _storage.read(key: kAuthNameKeyName);
+    return AuthSession(uid: uid, email: email, displayName: name);
   }
 
   @override
@@ -53,11 +60,18 @@ class SecureStorageAuthSessionStore implements AuthSessionStore {
     } else {
       await _storage.delete(key: kAuthEmailKeyName);
     }
+    final name = session.displayName;
+    if (name != null && name.isNotEmpty) {
+      await _storage.write(key: kAuthNameKeyName, value: name);
+    } else {
+      await _storage.delete(key: kAuthNameKeyName);
+    }
   }
 
   @override
   Future<void> clear() async {
     await _storage.delete(key: kAuthUidKeyName);
     await _storage.delete(key: kAuthEmailKeyName);
+    await _storage.delete(key: kAuthNameKeyName);
   }
 }

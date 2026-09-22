@@ -59,6 +59,7 @@ class Session {
   const Session({
     this.uid,
     this.email,
+    this.displayName,
     this.ready = false,
     this.restoring = false,
   });
@@ -66,11 +67,13 @@ class Session {
   const Session.signedOut()
     : uid = null,
       email = null,
+      displayName = null,
       ready = false,
       restoring = false;
 
   final String? uid;
   final String? email;
+  final String? displayName;
 
   /// `true` once this user's local data is ready to show.
   final bool ready;
@@ -84,11 +87,13 @@ class Session {
   Session copyWith({
     String? uid,
     String? email,
+    String? displayName,
     bool? ready,
     bool? restoring,
   }) => Session(
     uid: uid ?? this.uid,
     email: email ?? this.email,
+    displayName: displayName ?? this.displayName,
     ready: ready ?? this.ready,
     restoring: restoring ?? this.restoring,
   );
@@ -104,7 +109,12 @@ class SessionNotifier extends Notifier<Session> {
     final startup = ref.read(startupSessionProvider);
     if (startup == null) return const Session.signedOut();
     // main() already ran the migration for this session before us.
-    return Session(uid: startup.uid, email: startup.email, ready: true);
+    return Session(
+      uid: startup.uid,
+      email: startup.email,
+      displayName: startup.displayName,
+      ready: true,
+    );
   }
 
   /// Called by the auth controller after Firebase confirms a sign-in/up. Sets
@@ -114,8 +124,17 @@ class SessionNotifier extends Notifier<Session> {
   /// A prep failure is logged but not fatal — the session is already persisted,
   /// so the app proceeds (Settings → "Rebuild report data" is the recovery, and
   /// the next launch retries the migration anyway).
-  Future<void> enter({required String uid, required String email}) async {
-    state = Session(uid: uid, email: email, ready: false);
+  Future<void> enter({
+    required String uid,
+    required String email,
+    String? displayName,
+  }) async {
+    state = Session(
+      uid: uid,
+      email: email,
+      displayName: displayName,
+      ready: false,
+    );
     try {
       await ref.read(userDataPreparerProvider).prepareFor(uid);
       // Phase 6: fresh install with an existing account -> pull the backup
@@ -161,6 +180,20 @@ final currentUserEmailProvider = Provider<String?>(
   (ref) => ref.watch(sessionProvider).email,
 );
 
+/// The name for the home greeting: the display name if the user gave one,
+/// otherwise a readable first word taken from the email address.
+final currentUserFirstNameProvider = Provider<String>((ref) {
+  final session = ref.watch(sessionProvider);
+  final name = session.displayName?.trim();
+  if (name != null && name.isNotEmpty) return name.split(RegExp(r'\s+')).first;
+  final local = (session.email ?? '').split('@').first;
+  final word = local
+      .split(RegExp(r'[._\-\d]+'))
+      .firstWhere((w) => w.isNotEmpty, orElse: () => '');
+  if (word.isEmpty) return 'there';
+  return word[0].toUpperCase() + word.substring(1);
+});
+
 // --- Form submission ------------------------------------------------------
 
 enum AuthAction { signIn, signUp, resetPassword }
@@ -192,6 +225,7 @@ class AuthFormController extends Notifier<AuthFormState> {
     AuthAction action, {
     required String email,
     required String password,
+    String? displayName,
   }) async {
     if (state.submitting) return;
     state = const AuthFormState(submitting: true);
@@ -202,12 +236,24 @@ class AuthFormController extends Notifier<AuthFormState> {
           final uid = await auth.signIn(email: email, password: password);
           await ref
               .read(sessionProvider.notifier)
-              .enter(uid: uid, email: auth.currentUserEmail ?? email.trim());
+              .enter(
+                uid: uid,
+                email: auth.currentUserEmail ?? email.trim(),
+                displayName: auth.currentUserDisplayName,
+              );
         case AuthAction.signUp:
-          final uid = await auth.signUp(email: email, password: password);
+          final uid = await auth.signUp(
+            email: email,
+            password: password,
+            displayName: displayName,
+          );
           await ref
               .read(sessionProvider.notifier)
-              .enter(uid: uid, email: auth.currentUserEmail ?? email.trim());
+              .enter(
+                uid: uid,
+                email: auth.currentUserEmail ?? email.trim(),
+                displayName: auth.currentUserDisplayName,
+              );
         case AuthAction.resetPassword:
           await auth.sendPasswordReset(email: email);
           state = const AuthFormState(done: true);

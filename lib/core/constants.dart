@@ -17,6 +17,7 @@ const String kHiveEncryptionKeyName = 'spendly.hive.aeskey.v1';
 /// UID is what startup routing reads; neither key ever holds a password.
 const String kAuthUidKeyName = 'spendly.auth.uid.v1';
 const String kAuthEmailKeyName = 'spendly.auth.email.v1';
+const String kAuthNameKeyName = 'spendly.auth.name.v1';
 
 /// Names of the encrypted Hive boxes. One box per aggregate.
 class HiveBoxes {

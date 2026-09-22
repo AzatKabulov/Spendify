@@ -15,6 +15,9 @@ class UnavailableAuthRepository implements AuthRepository {
   String? get currentUserEmail => null;
 
   @override
+  String? get currentUserDisplayName => null;
+
+  @override
   Future<String> signIn({
     required String email,
     required String password,
@@ -24,6 +27,7 @@ class UnavailableAuthRepository implements AuthRepository {
   Future<String> signUp({
     required String email,
     required String password,
+    String? displayName,
   }) async => throw const AuthUnavailableException();
 
   @override

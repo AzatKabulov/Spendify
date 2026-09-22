@@ -42,7 +42,10 @@ Future<void> main() async {
   // also runs the app as a local demo user, so `AuthGate` opens straight on the
   // home screen without Firebase. Inert (and tree-shaken) otherwise.
   if (await maybeDemoSeed(store)) {
-    session ??= const AuthSession(uid: kLocalUserId, email: 'demo@spendify.app');
+    session ??= const AuthSession(
+      uid: kLocalUserId,
+      email: 'demo@spendify.app',
+    );
   }
 
   final container = ProviderContainer(
