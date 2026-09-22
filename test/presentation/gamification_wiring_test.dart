@@ -4,8 +4,8 @@ import 'package:spendify/core/constants.dart';
 import 'package:spendify/domain/entities/enums.dart';
 import 'package:spendify/domain/entities/transaction.dart';
 import 'package:spendify/presentation/screens/home_screen.dart';
+import 'package:spendify/presentation/widgets/home/home_sections.dart';
 import 'package:spendify/presentation/screens/transaction_form_screen.dart';
-import 'package:spendify/presentation/widgets/transaction_list_tile.dart';
 
 import '../support/widget_test_scaffold.dart';
 
@@ -28,7 +28,7 @@ void main() {
   ) async {
     final repos = await pumpSpendify(tester, home: const HomeScreen());
 
-    await tester.tap(find.widgetWithText(FloatingActionButton, 'Add'));
+    await tester.tap(find.text('Add'));
     await tester.pumpAndSettle();
 
     await tester.enterText(
@@ -55,7 +55,7 @@ void main() {
     final repos = await pumpSpendify(tester, home: const HomeScreen());
 
     // log through the form so the engine actually awards it
-    await tester.tap(find.widgetWithText(FloatingActionButton, 'Add'));
+    await tester.tap(find.text('Add'));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.widgetWithText(TextFormField, 'Amount').first,
@@ -68,7 +68,14 @@ void main() {
     final awardedXp = (await repos.gamification.get())!.xp;
     expect(awardedXp, greaterThan(0));
 
-    await tester.drag(find.byType(TransactionListTile), const Offset(-600, 0));
+    // Scope to the transaction row: the reward snackbar is a Dismissible too.
+    await tester.drag(
+      find.descendant(
+        of: find.byType(RecentTransactionsCard),
+        matching: find.byType(Dismissible),
+      ),
+      const Offset(-600, 0),
+    );
     await tester.pumpAndSettle();
 
     final afterDelete = (await repos.gamification.get())!.xp;

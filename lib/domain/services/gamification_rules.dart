@@ -56,6 +56,30 @@ int levelForXp(int xp) {
   return level;
 }
 
+/// Display name for a level — a label over the existing level number, not a
+/// stored field and not something the engine ever reads. Levels above the
+/// last named one keep the final title.
+///
+/// The names describe *budgeting competence*, never spending: nothing here
+/// congratulates a user for using the app more often (CLAUDE.md §7).
+String levelTitle(int level) {
+  const titles = <String>[
+    'Getting Started', // 1
+    'Note Taker', // 2
+    'Habit Builder', // 3
+    'Budget Keeper', // 4
+    'Money Explorer', // 5
+    'Steady Saver', // 6
+    'Financial Planner', // 7
+    'Money Manager', // 8
+    'Budget Strategist', // 9
+    'Money Master', // 10+
+  ];
+  if (level <= 1) return titles.first;
+  if (level >= titles.length) return titles.last;
+  return titles[level - 1];
+}
+
 /// Where [xp] sits within its current level, for the stats-screen progress bar.
 ///  - [level]     : current level
 ///  - [intoLevel] : XP earned since reaching [level] (>= 0)
