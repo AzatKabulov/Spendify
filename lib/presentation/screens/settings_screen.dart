@@ -1,25 +1,27 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
 
-import '../../domain/entities/ai_consent.dart';
-import '../../domain/entities/sync_snapshot.dart';
-import '../providers/ai_providers.dart';
+import '../../core/theme/insets.dart';
 import '../providers/auth_providers.dart';
-import '../providers/privacy_providers.dart';
-import '../providers/repository_providers.dart';
-import '../providers/sync_providers.dart';
-import 'data_sent_screen.dart';
-import 'privacy_notice_screen.dart';
+import '../providers/gamification_providers.dart';
+import '../widgets/home/home_sections.dart';
+import '../widgets/settings/settings_widgets.dart';
+import 'account_screen.dart';
+import 'ai_settings_screen.dart';
+import 'appearance_screen.dart';
+import 'budgets_screen.dart';
+import 'categories_screen.dart';
+import 'data_storage_screen.dart';
+import 'notifications_info_screen.dart';
+import 'privacy_screen.dart';
 
-/// Settings — the account section (Phase 5), backup/sync (Phase 6), report-data
-/// rebuild (Phase 4), and the Phase 10 privacy & AI surfaces: the AI on/off
-/// toggle, the transparency views, clear cached advice, export data, and
-/// delete-all-local-data.
+/// Settings — the hub the redesign's mockup shows: a profile row up top, then
+/// grouped rows opening the real sub-screens. Restructured from a single flat
+/// list (Phase 10) into this hub + sub-pages for the mockup pass; see
+/// CLAUDE.md §9 for what each mockup row was kept, corrected or dropped, and
+/// why (a "Goals" row was dropped — there is no such feature; the rest moved
+/// to `AccountScreen`, `NotificationsInfoScreen`, `AppearanceScreen`,
+/// `AiSettingsScreen`, `DataStorageScreen`, `PrivacyScreen`).
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
@@ -28,174 +30,31 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  bool _rebuilding = false;
   bool _signingOut = false;
-  bool _syncing = false;
-  bool _clearingAdvice = false;
-  bool _exporting = false;
-  bool _wiping = false;
 
-  void _open(Widget screen) => Navigator.of(
+  void _push(Widget screen) => Navigator.of(
     context,
   ).push(MaterialPageRoute<void>(builder: (_) => screen));
 
-  Future<void> _syncNow() async {
-    setState(() => _syncing = true);
-    try {
-      await ref.read(syncNowProvider)();
-    } finally {
-      if (mounted) setState(() => _syncing = false);
-    }
-  }
-
-  Future<void> _rebuildAggregates() async {
-    setState(() => _rebuilding = true);
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      final txns = await ref.read(transactionRepositoryProvider).getAll();
-      await ref.read(aggregationMaintenanceProvider).rebuildAll(txns);
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Report data rebuilt')),
-      );
-    } finally {
-      if (mounted) setState(() => _rebuilding = false);
-    }
-  }
-
-  Future<void> _setAi(bool on) async {
-    final notifier = ref.read(aiConsentProvider.notifier);
-    if (on) {
-      await notifier.grant();
-    } else {
-      await notifier.revoke();
-    }
-  }
-
-  Future<void> _clearAdvice() async {
-    final ok = await _confirm(
-      title: 'Clear cached advice?',
-      message:
-          'The last set of AI suggestions is removed. New advice is generated '
-          'next time you open Insights.',
-      confirmLabel: 'Clear',
-    );
-    if (ok != true || !mounted) return;
-    setState(() => _clearingAdvice = true);
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      await ref.read(adviceRecordRepositoryProvider).clear();
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Cached advice cleared')),
-      );
-    } finally {
-      if (mounted) setState(() => _clearingAdvice = false);
-    }
-  }
-
-  Future<void> _exportData() async {
-    setState(() => _exporting = true);
-    final messenger = ScaffoldMessenger.of(context);
-    final String json;
-    try {
-      json = await ref
-          .read(dataExporterProvider)
-          .buildJsonString(
-            generatedAt: DateTime.now(),
-            account: ref.read(currentUserEmailProvider),
-          );
-    } catch (_) {
-      if (mounted) {
-        messenger.showSnackBar(
-          const SnackBar(content: Text('Could not build the export.')),
-        );
-      }
-      return;
-    } finally {
-      if (mounted) setState(() => _exporting = false);
-    }
-    if (!mounted) return;
-    await showDialog<void>(
+  Future<void> _signOut() async {
+    final ok = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Data exported'),
+      builder: (context) => AlertDialog(
+        title: const Text('Sign out?'),
         content: const Text(
-          'A complete JSON copy of your data is ready. Save it to a file, or '
-          'copy it to the clipboard.',
+          'Your data stays on this device. You can sign back in any time.',
         ),
         actions: <Widget>[
           TextButton(
-            onPressed: () {
-              Clipboard.setData(ClipboardData(text: json));
-              Navigator.of(dialogContext).pop();
-              messenger.showSnackBar(
-                const SnackBar(content: Text('Export copied to clipboard')),
-              );
-            },
-            child: const Text('Copy JSON'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              _saveExportToFile(json);
-            },
-            child: const Text('Save file'),
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Done'),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Sign out'),
           ),
         ],
       ),
-    );
-  }
-
-  Future<void> _saveExportToFile(String json) async {
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      final stamp = DateFormat('yyyyMMdd-HHmmss').format(DateTime.now());
-      final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/spendify-export-$stamp.json');
-      await file.writeAsString(json);
-      messenger.showSnackBar(SnackBar(content: Text('Saved to ${file.path}')));
-    } catch (_) {
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Could not save a file — copy the JSON instead.'),
-        ),
-      );
-    }
-  }
-
-  Future<void> _deleteAllData() async {
-    final ok = await _confirm(
-      title: 'Delete all local data?',
-      message:
-          'This permanently erases every transaction, budget, category and '
-          'reward on this device, and signs you out.\n\n'
-          'Your cloud backup is NOT deleted — sign in again to restore it, or '
-          'create a new account to start fresh.',
-      confirmLabel: 'Delete everything',
-      destructive: true,
-    );
-    if (ok != true) return;
-
-    setState(() => _wiping = true);
-    try {
-      await ref.read(localDataWiperProvider).wipe();
-    } finally {
-      if (mounted) setState(() => _wiping = false);
-    }
-    // Drop the session -> AuthGate rebuilds to the sign-in screen underneath.
-    ref.read(sessionProvider.notifier).leave();
-    if (!mounted) return;
-    Navigator.of(context).popUntil((route) => route.isFirst);
-  }
-
-  Future<void> _signOut() async {
-    final ok = await _confirm(
-      title: 'Sign out?',
-      message: 'Your data stays on this device. You can sign back in any time.',
-      confirmLabel: 'Sign out',
     );
     if (ok != true) return;
 
@@ -205,228 +64,152 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
-  Future<bool?> _confirm({
-    required String title,
-    required String message,
-    required String confirmLabel,
-    bool destructive = false,
-  }) {
-    return showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            style: destructive
-                ? FilledButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.error,
-                  )
-                : null,
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(confirmLabel),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final email = ref.watch(currentUserEmailProvider);
-    final syncAvailable = ref.watch(syncAvailableProvider);
-    final syncSnap =
-        ref.watch(syncSnapshotProvider).value ?? const SyncSnapshot();
-    final aiKeyPresent = ref.watch(aiKeyPresentProvider);
-    final aiOn = ref.watch(aiConsentProvider) == AiConsent.granted;
+    final name = ref.watch(currentUserFirstNameProvider);
+    final level = ref.watch(gamificationStateProvider).value?.level;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
-      body: ListView(
-        children: <Widget>[
-          const _SectionHeader('Account'),
-          ListTile(
-            leading: const Icon(Icons.person_outline),
-            title: Text(email ?? 'Signed in'),
-            subtitle: email == null ? null : const Text('Signed in'),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(
+            Insets.md,
+            Insets.sm,
+            Insets.md,
+            Insets.lg,
           ),
-          ListTile(
-            leading: Icon(Icons.logout, color: theme.colorScheme.error),
-            title: Text(
-              'Sign out',
-              style: TextStyle(color: theme.colorScheme.error),
-            ),
-            trailing: _spinnerIf(_signingOut),
-            onTap: _signingOut ? null : _signOut,
-          ),
-
-          const Divider(),
-          const _SectionHeader('Privacy & AI'),
-          if (aiKeyPresent)
-            SwitchListTile(
-              secondary: const Icon(Icons.auto_awesome_outlined),
-              title: const Text('AI features'),
-              subtitle: Text(
-                aiOn
-                    ? 'Receipt scanning and spending advice are on. They send '
-                          'data to Google Gemini.'
-                    : 'Off. Receipt scanning and advice are hidden; nothing is '
-                          'sent to Google Gemini.',
+          children: <Widget>[
+            Text(
+              'Settings',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
               ),
-              value: aiOn,
-              onChanged: _setAi,
-            )
-          else
-            const ListTile(
-              leading: Icon(Icons.auto_awesome_outlined),
-              title: Text('AI features'),
-              subtitle: Text(
-                'Not available in this build (no Gemini API key). Everything '
-                'else works.',
-              ),
-              enabled: false,
             ),
-          ListTile(
-            leading: const Icon(Icons.visibility_outlined),
-            title: const Text('What’s sent to Gemini'),
-            subtitle: const Text('See the exact data, built from your account'),
-            onTap: () => _open(const DataSentScreen()),
-          ),
-          ListTile(
-            leading: const Icon(Icons.description_outlined),
-            title: const Text('Privacy notice'),
-            onTap: () => _open(const PrivacyNoticeScreen()),
-          ),
-
-          const Divider(),
-          const _SectionHeader('Backup & sync'),
-          if (!syncAvailable)
-            const ListTile(
-              leading: Icon(Icons.cloud_off_outlined),
-              title: Text('Backup not set up'),
-              subtitle: Text(
-                'Sync to the cloud becomes available once Firebase is '
-                'configured for this build.',
+            Text(
+              'Manage your account and preferences',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
               ),
-            )
-          else ...<Widget>[
-            ListTile(
-              leading: Icon(_syncIcon(syncSnap.phase)),
-              title: Text(_syncTitle(syncSnap)),
-              subtitle: Text(_syncSubtitle(syncSnap)),
             ),
-            ListTile(
-              leading: const Icon(Icons.sync),
-              title: const Text('Sync now'),
-              trailing: _spinnerIf(_syncing || syncSnap.isSyncing),
-              onTap: (_syncing || syncSnap.isSyncing) ? null : _syncNow,
+            const SizedBox(height: Insets.md),
+            HomeCard(
+              onTap: () => _push(const AccountScreen()),
+              child: Row(
+                children: <Widget>[
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor: scheme.primaryContainer,
+                    child: Text(
+                      name.isEmpty ? '?' : name[0].toUpperCase(),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: scheme.onPrimaryContainer,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: Insets.sm + 4),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          name,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        Text(
+                          <String>[
+                            ?email,
+                            if (level != null) 'Level $level',
+                          ].join(' · '),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+                ],
+              ),
+            ),
+            const SizedBox(height: Insets.md - 2),
+            SettingsGroup(
+              rows: <Widget>[
+                SettingsRow(
+                  icon: Icons.person_outline,
+                  title: 'Account',
+                  subtitle: 'Profile, security and connected accounts',
+                  onTap: () => _push(const AccountScreen()),
+                ),
+                SettingsRow(
+                  icon: Icons.category_outlined,
+                  title: 'Categories',
+                  subtitle: 'Manage your spending categories',
+                  onTap: () => _push(const CategoriesScreen()),
+                ),
+                SettingsRow(
+                  icon: Icons.pie_chart_outline,
+                  title: 'Budgets',
+                  subtitle: 'Manage budget settings and alerts',
+                  onTap: () => _push(const BudgetsScreen()),
+                ),
+                SettingsRow(
+                  icon: Icons.notifications_outlined,
+                  title: 'Notifications',
+                  subtitle: 'Alerts and reminders',
+                  onTap: () => _push(const NotificationsInfoScreen()),
+                ),
+                SettingsRow(
+                  icon: Icons.palette_outlined,
+                  title: 'Appearance',
+                  subtitle: 'Theme, language and display',
+                  onTap: () => _push(const AppearanceScreen()),
+                ),
+                SettingsRow(
+                  icon: Icons.auto_awesome_outlined,
+                  title: 'AI Settings',
+                  subtitle: 'Spendify AI and data preferences',
+                  onTap: () => _push(const AiSettingsScreen()),
+                ),
+                SettingsRow(
+                  icon: Icons.storage_outlined,
+                  title: 'Data & Storage',
+                  subtitle: 'Backup, restore, export',
+                  onTap: () => _push(const DataStorageScreen()),
+                ),
+                SettingsRow(
+                  icon: Icons.privacy_tip_outlined,
+                  title: 'Privacy',
+                  subtitle: 'Your data and privacy controls',
+                  onTap: () => _push(const PrivacyScreen()),
+                ),
+              ],
+            ),
+            const SizedBox(height: Insets.md - 2),
+            SettingsGroup(
+              rows: <Widget>[
+                SettingsRow(
+                  icon: Icons.logout,
+                  title: 'Sign out',
+                  danger: true,
+                  enabled: !_signingOut,
+                  onTap: _signOut,
+                  trailing: _signingOut
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : null,
+                ),
+              ],
             ),
           ],
-
-          const Divider(),
-          const _SectionHeader('Data'),
-          ListTile(
-            leading: const Icon(Icons.refresh),
-            title: const Text('Rebuild report data'),
-            subtitle: const Text(
-              'Recomputes every cached total from your transactions. Use this '
-              'if a report or budget figure looks wrong.',
-            ),
-            trailing: _spinnerIf(_rebuilding),
-            onTap: _rebuilding ? null : _rebuildAggregates,
-          ),
-          ListTile(
-            leading: const Icon(Icons.psychology_alt_outlined),
-            title: const Text('Clear cached advice'),
-            trailing: _spinnerIf(_clearingAdvice),
-            onTap: _clearingAdvice ? null : _clearAdvice,
-          ),
-          ListTile(
-            leading: const Icon(Icons.download_outlined),
-            title: const Text('Export my data'),
-            subtitle: const Text(
-              'A complete JSON copy of everything you added',
-            ),
-            trailing: _spinnerIf(_exporting),
-            onTap: _exporting ? null : _exportData,
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.delete_forever_outlined,
-              color: theme.colorScheme.error,
-            ),
-            title: Text(
-              'Delete all local data',
-              style: TextStyle(color: theme.colorScheme.error),
-            ),
-            subtitle: const Text('Cloud backup is not affected'),
-            trailing: _spinnerIf(_wiping),
-            onTap: _wiping ? null : _deleteAllData,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget? _spinnerIf(bool busy) => busy
-      ? const SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        )
-      : null;
-}
-
-IconData _syncIcon(SyncPhase phase) => switch (phase) {
-  SyncPhase.syncing => Icons.cloud_sync_outlined,
-  SyncPhase.offline => Icons.cloud_off_outlined,
-  SyncPhase.error => Icons.sync_problem_outlined,
-  SyncPhase.idle => Icons.cloud_done_outlined,
-};
-
-String _syncTitle(SyncSnapshot s) => switch (s.phase) {
-  SyncPhase.syncing => 'Backing up…',
-  SyncPhase.offline => 'Offline',
-  SyncPhase.error => 'Last backup failed',
-  SyncPhase.idle => 'Backed up',
-};
-
-String _syncSubtitle(SyncSnapshot s) {
-  final parts = <String>[];
-  final at = s.lastSyncedAt;
-  if (at != null) {
-    parts.add('Last synced ${DateFormat('d MMM, HH:mm').format(at.toLocal())}');
-  } else {
-    parts.add('Not synced yet');
-  }
-  if (s.pendingCount > 0) {
-    parts.add('${s.pendingCount} pending');
-  }
-  if (s.phase == SyncPhase.error && s.lastError != null) {
-    parts.add(s.lastError!);
-  }
-  return parts.join(' · ');
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-      child: Text(
-        text,
-        style: theme.textTheme.labelLarge?.copyWith(
-          color: theme.colorScheme.primary,
         ),
       ),
     );
