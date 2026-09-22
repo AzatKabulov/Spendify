@@ -112,7 +112,7 @@ void main() {
         home: const CategoriesScreen(),
         online: false,
       );
-      await tester.tap(find.widgetWithText(FloatingActionButton, 'New'));
+      await tester.tap(find.text('Create Custom Category'));
       await tester.pumpAndSettle();
       await tester.enterText(find.widgetWithText(TextFormField, 'Name'), 'Gym');
       await tester.tap(find.widgetWithText(FilledButton, 'Create'));
@@ -137,7 +137,7 @@ void main() {
 
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(FloatingActionButton, 'New'));
+      await tester.tap(find.byTooltip('New budget'));
       await tester.pumpAndSettle();
       await tester.enterText(
         find.widgetWithText(TextFormField, 'Limit'),
@@ -212,7 +212,7 @@ void main() {
       // pumpSpendify signs in as the local user with no network; the home
       // screen renders, proving the routing decision needed no Firebase call.
       await pumpSpendify(tester, home: const HomeScreen(), online: false);
-      expect(find.text('Spendify'), findsOneWidget);
+      expect(find.textContaining('Good '), findsOneWidget);
       pass('App relaunch with session intact');
     });
 

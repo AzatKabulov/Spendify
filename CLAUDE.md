@@ -335,6 +335,131 @@ renders in light mode regardless of the system setting. A from-scratch dark
 palette was judged not "genuinely quick" within Phase 12's scope; recorded as
 future work rather than shipped half-finished. `lib/core/theme/app_theme.dart`.
 
+**Bottom navigation: the fourth slot (decided, redesign).** The five tabs are
+**Home / Transactions / Budgets / Reports / Profile**. The mockups conflict —
+one shows *Reports* in the fourth slot, another shows *Rewards* in the same
+slot — and five destinations is already the Material ceiling, so only one of
+them fits. Reports won it: weekly/monthly/yearly visual reports are a
+**[REPORT COMMITMENT]** (§6), Rewards is not. Consequences:
+- **AI Insights is no longer a tab.** It was a conditional fifth-and-a-half
+  destination that appeared only when a Gemini key was present, which made the
+  bar's shape depend on configuration. It now lives at Reports → Trends →
+  Insights (cached advice inline, "Open Insights" for a fresh generation) and
+  on the Home AI card. Both are still gated on `aiFeaturesEnabledProvider`.
+- **Rewards is reached from Home** — the quick-action tile (shown when receipt
+  scanning is off) and the More sheet (always).
+- The Reports quick action on Home *switches tab* rather than pushing a second
+  `ReportsScreen` over the shell; `_Dashboard` takes an `onOpenReports`
+  callback for this, as it already did for Transactions and Budgets.
+
+**Rewards data: what does not exist (redesign).** The mockups show per-badge XP
+values ("+50 XP") and unlock dates ("Earned 3 days ago"). Neither is stored —
+`Badge` has no XP field and `GamificationState.unlockedBadgeIds` is a bare id
+list with no timestamps — so neither is rendered. What *is* real and shown:
+per-badge progress (`domain/services/badge_progress.dart`, thresholds mirrored
+from `badge_rules.dart` and held to it by `test/domain/services/
+badge_progress_test.dart`), the weekday streak strip and the activity heatmap
+(both from cached **daily** `PeriodAggregate`s, never a transaction scan), and
+`levelTitle()` — a display-only label over the existing level number that the
+engine never reads.
+
+**"Ask Spendify AI" — a real new capability, not a re-skin (redesign,
+flagged).** The mockup's Insights batch showed a full chat screen. The app
+had no conversational feature before this — only single-shot advice
+generation (§5 Advice Generator) — so this is new scope, built for real
+rather than faked:
+- `AdviceGeneratorRepository` gained `ask({summary, question, history})`
+  alongside `generate()`. `GeminiAdviceClient.ask` shares `generate`'s
+  transport/error handling (factored into `_generateText`) but asks for a
+  plain-text reply, not the strict advice JSON schema.
+- **Same data-minimisation rule as advice (CLAUDE.md §7.3).** Only the
+  aggregated `AdviceSummary`, the typed question, and up to the last 6 turns
+  of the *current* conversation are sent — never a transaction row. There is
+  no tool-calling / function-calling, so a question cannot cause the model to
+  pull in more data than the static summary already contains.
+- **The conversation is not persisted.** `AdviceChatController` (`presentation/
+  providers/advice_chat_providers.dart`) is a plain `NotifierProvider` —
+  in-memory for the app process, never written to Hive, never synced to
+  Firestore. Deliberate: keeps the feature inside the data-minimisation
+  stance without a new synced entity for a capstone-scope addition. Revisit
+  if the feature needs to survive an app restart.
+- `AdviceItem` gained a `type` (`spending` | `saving` | `budgeting` |
+  `general`, default `general`) so the mockup's "For You / Spending / Saving /
+  Budgeting" tabs filter something real — Gemini classifies each suggestion
+  itself in the same JSON response. No Hive schema change (same
+  `List<String>`-of-JSON bridge as the Phase 9 deviation above);
+  `test/domain/services/advice_json_parser_test.dart` and
+  `gemini_advice_client_test.dart` cover the new field.
+- **Deliberately omitted from the detail screen:** a "Positive/Attention"
+  sentiment badge. Nothing in the data honestly classifies arbitrary
+  Gemini-written text as good or bad news; guessing from keywords would risk
+  mislabelling it.
+
+**"What's Sent to Gemini" — corrected, not copied (redesign, flagged).** The
+mockup's "Transaction data" screen claimed merchant name, transaction note and
+exact date are sent to Gemini. **That is false for this app** —
+`buildAdviceSummary` (`domain/services/advice_summary_builder.dart`) sends
+only category *totals* rounded to whole ringgit, a month label, and counts;
+this was already asserted by `advice_summary_builder_test.dart` and stated on
+the existing AI-consent screen before this redesign touched it. Copying the
+mockup's claim verbatim would have made this transparency screen state
+something untrue, the opposite of the §7.4 commitment ("specific, not a
+generic blob"). `data_sent_screen.dart` describes the real payload instead,
+and `settings_privacy_test.dart` has a regression test pinning merchant/notes
+under "Data not included", never "Data included".
+
+**Settings restructured into a hub + sub-pages (redesign, flagged).** The
+mockup's Settings/Account/Notifications batch showed an IA the old flat
+single-list `SettingsScreen` didn't have. Rebuilt as a hub
+(`settings_screen.dart`) linking to `AccountScreen`, `NotificationsInfoScreen`,
+`AppearanceScreen`, `AiSettingsScreen`, `DataStorageScreen`, `PrivacyScreen`
+(which itself links to `PrivacyNoticeScreen` and the new `YourRightsScreen`).
+Every row maps to something the app actually does; several mockup rows do
+not exist and were either dropped or rewritten to the real capability:
+- **Dropped: "Goals".** There is no savings-goals feature anywhere in the
+  data model (no `Goal` entity). Not shown, not stubbed.
+- **Dropped: biometric login, two-factor auth, Google/Apple "Connected
+  Accounts".** Auth is Firebase email/password only (CLAUDE.md §2) — no
+  `local_auth`, no social providers. `AccountScreen` says this plainly in one
+  line rather than drawing controls that would do nothing.
+- **`NotificationsInfoScreen` is an honest empty state, not fake toggles.**
+  There is no push-notification capability at all (no
+  `flutter_local_notifications`, no `firebase_messaging` — grep confirms the
+  only "notification" in `lib/` is a code comment). The mockup's six alert
+  toggles would each be a switch that visibly flips and does nothing, which
+  is worse than the screen not existing, so it states what happens instead
+  (in-app budget warnings on Home/Budgets) rather than drawing them.
+- **`AppearanceScreen`** shows the real, already-decided state (light-only
+  theme, English-only) rather than a dark-mode switch that would always snap
+  back or a language picker with one option.
+- **"Delete your account" → "Delete all local data".** There is no
+  Firebase-account-deletion flow, only the existing local wipe (which does
+  not touch the Firestore backup). `YourRightsScreen` uses the accurate name
+  and the existing accurate caveat copy, never the mockup's stronger claim.
+- **"Request a correction"** has no ticket/support-request flow behind it —
+  the real mechanism is that every transaction/category/budget is editable
+  in place. `YourRightsScreen` explains that directly instead of implying a
+  submitted request.
+- **"Restore" on Data & Storage** is described, not a second button: signing
+  in on a fresh install already auto-restores the Firestore backup
+  (`SessionNotifier.enter` → `syncBootstrapProvider.restore()`), so a manual
+  "Restore" control would either duplicate that or do nothing.
+
+**Logo (redesign).** The Android launcher icon, adaptive icon and native
+splash now render the user-supplied logo (a leaf-faced mascot in a wallet),
+replacing the earlier code-generated wallet-card mark. Source processing:
+`assets/icon/icon_foreground.png` and both `splash_logo*.png` are the logo
+trimmed to its content and re-centred at roughly 42% (icon) / 60–67% (splash)
+of the canvas, matching Android's adaptive-icon safe zone; `icon.png` is the
+same art flattened onto an opaque `#226A4B` background for the legacy square
+icon. Regenerated via `dart run flutter_launcher_icons` and `dart run
+flutter_native_splash:create` — rerun both if the source art changes.
+**Not changed:** the in-app hand-drawn `LeafMark`/`AssistantMascot`
+(`presentation/widgets/auth/auth_illustrations.dart`) — those stay
+code-drawn vector marks; swapping them for this raster logo at arbitrary
+in-app sizes was judged a separate, bigger redesign than "put the logo where
+people see it" asked for.
+
 ---
 
 ## 10. Common commands

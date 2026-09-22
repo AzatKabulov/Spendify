@@ -403,12 +403,14 @@ class FakeAdviceGenerator implements AdviceGeneratorRepository {
       body:
           'Food is your biggest category this month. Trying to keep it '
           'nearer RM 250 would free up some room.',
+      type: AdviceItemType.spending,
     ),
     AdviceItem(
       title: 'Nice work staying under on Transport',
       body:
           'You came in below your Transport budget — keep doing what you '
           'are doing there.',
+      type: AdviceItemType.budgeting,
     ),
   ];
 
@@ -419,6 +421,29 @@ class FakeAdviceGenerator implements AdviceGeneratorRepository {
     final failure = failWith;
     if (failure != null) throw failure;
     return next;
+  }
+
+  // --- "Ask Spendify AI" chat ------------------------------------------
+
+  int askCalls = 0;
+  String? lastQuestion;
+  List<AdviceChatTurn>? lastHistory;
+  AdviceGenerationException? askFailWith;
+  String nextReply = "Here's a tip based on your spending: keep it up!";
+
+  @override
+  Future<String> ask({
+    required AdviceSummary summary,
+    required String question,
+    List<AdviceChatTurn> history = const <AdviceChatTurn>[],
+  }) async {
+    askCalls++;
+    lastSummary = summary;
+    lastQuestion = question;
+    lastHistory = history;
+    final failure = askFailWith;
+    if (failure != null) throw failure;
+    return nextReply;
   }
 }
 
@@ -445,6 +470,9 @@ class FakeAuthRepository implements AuthRepository {
   @override
   String? currentUserEmail;
 
+  @override
+  String? currentUserDisplayName;
+
   Future<String> _authenticate(String email) async {
     if (gate != null) await gate!.future;
     final failure = failWith;
@@ -460,9 +488,17 @@ class FakeAuthRepository implements AuthRepository {
     return _authenticate(email);
   }
 
+  /// The [displayName] passed to the most recent [signUp] call, if any.
+  String? lastDisplayName;
+
   @override
-  Future<String> signUp({required String email, required String password}) {
+  Future<String> signUp({
+    required String email,
+    required String password,
+    String? displayName,
+  }) {
     signUpCalls++;
+    lastDisplayName = displayName;
     return _authenticate(email);
   }
 

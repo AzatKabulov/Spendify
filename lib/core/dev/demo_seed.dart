@@ -34,8 +34,7 @@ Future<bool> maybeDemoSeed(HiveStore store) async {
 
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
-  DateTime daysBack(int d) =>
-      DateTime(today.year, today.month, today.day - d);
+  DateTime daysBack(int d) => DateTime(today.year, today.month, today.day - d);
 
   // --- 1. categories ---------------------------------------------------
   final catRepo = HiveCategoryRepository(
@@ -45,8 +44,7 @@ Future<bool> maybeDemoSeed(HiveStore store) async {
   );
   await catRepo.ensureDefaultsSeeded();
   final categories = await catRepo.getAll();
-  String cat(String name) =>
-      categories.firstWhere((c) => c.name == name).id;
+  String cat(String name) => categories.firstWhere((c) => c.name == name).id;
 
   final food = cat('Food');
   final transport = cat('Transport');
@@ -111,7 +109,11 @@ Future<bool> maybeDemoSeed(HiveStore store) async {
     }
     // Entertainment — a few times a week.
     if (rng.nextInt(3) == 0) {
-      add(amountMinor: between(1500, 6500), categoryId: entertainment, date: date);
+      add(
+        amountMinor: between(1500, 6500),
+        categoryId: entertainment,
+        date: date,
+      );
     }
     // Health — occasional.
     if (rng.nextInt(18) == 0) {
@@ -131,8 +133,12 @@ Future<bool> maybeDemoSeed(HiveStore store) async {
   for (var m = 0; m < 4; m++) {
     final billDate = DateTime(today.year, today.month - m, 3);
     if (!billDate.isAfter(today)) {
-      add(amountMinor: between(8000, 21000), categoryId: bills, date: billDate,
-          note: 'Phone + internet');
+      add(
+        amountMinor: between(8000, 21000),
+        categoryId: bills,
+        date: billDate,
+        note: 'Phone + internet',
+      );
     }
   }
 
@@ -181,15 +187,22 @@ Future<bool> maybeDemoSeed(HiveStore store) async {
   // --- 4. budgets — one in each warning state this month ---------------
   final monthStart = DateTime(today.year, today.month, 1);
   int monthSpend(String categoryId) => allTxns
-      .where((t) =>
-          !t.isDeleted &&
-          t.type == TransactionType.expense &&
-          t.categoryId == categoryId &&
-          !t.date.isBefore(monthStart))
+      .where(
+        (t) =>
+            !t.isDeleted &&
+            t.type == TransactionType.expense &&
+            t.categoryId == categoryId &&
+            !t.date.isBefore(monthStart),
+      )
       .fold(0, (sum, t) => sum + t.amountMinor);
 
   /// A monthly category budget whose limit puts current spend at [fraction].
-  BudgetModel budget(String id, String? categoryId, int spent, double fraction) {
+  BudgetModel budget(
+    String id,
+    String? categoryId,
+    int spent,
+    double fraction,
+  ) {
     final limit = fraction <= 0
         ? 50000
         : ((spent / fraction) / 100).round() * 100; // round to the ringgit
@@ -211,11 +224,19 @@ Future<bool> maybeDemoSeed(HiveStore store) async {
     // exceeded: spent = 130% of the limit
     'demo-b-food': budget('demo-b-food', food, monthSpend(food), 1.30),
     // approaching: spent = 90% of the limit
-    'demo-b-groc':
-        budget('demo-b-groc', groceries, monthSpend(groceries), 0.90),
+    'demo-b-groc': budget(
+      'demo-b-groc',
+      groceries,
+      monthSpend(groceries),
+      0.90,
+    ),
     // safe: spent = 45% of the limit
-    'demo-b-ent':
-        budget('demo-b-ent', entertainment, monthSpend(entertainment), 0.45),
+    'demo-b-ent': budget(
+      'demo-b-ent',
+      entertainment,
+      monthSpend(entertainment),
+      0.45,
+    ),
   });
 
   // --- 5. gamification state -----------------------------------------

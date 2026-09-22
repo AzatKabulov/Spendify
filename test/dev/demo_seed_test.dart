@@ -58,10 +58,7 @@ void main() {
         harness.store.periodAggregates,
       );
       expect(await aggRepo.getAll(), isNotEmpty);
-      expect(
-        harness.store.meta.get(MetaKeys.aggregatesBuilt),
-        isTrue,
-      );
+      expect(harness.store.meta.get(MetaKeys.aggregatesBuilt), isTrue);
 
       // --- three budgets, one in each warning state this month -------
       final now = DateTime.now();
@@ -73,11 +70,13 @@ void main() {
 
       final monthStart = DateTime(now.year, now.month, 1);
       int monthSpend(String categoryId) => txns
-          .where((t) =>
-              !t.isDeleted &&
-              t.type == TransactionType.expense &&
-              t.categoryId == categoryId &&
-              !t.date.isBefore(monthStart))
+          .where(
+            (t) =>
+                !t.isDeleted &&
+                t.type == TransactionType.expense &&
+                t.categoryId == categoryId &&
+                !t.date.isBefore(monthStart),
+          )
           .fold(0, (sum, t) => sum + t.amountMinor);
 
       final levels = <BudgetLevel>{};

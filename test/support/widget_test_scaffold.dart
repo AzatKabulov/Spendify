@@ -82,6 +82,15 @@ Future<TestRepos> pumpSpendify(
   /// (Phase 12 Part C) pumps screens at 2.0 to check for overflow.
   double textScale = 1.0,
 }) async {
+  // Keep the default test width (800 logical px — same as Flutter's own
+  // default surface, so nothing that already fit at that width regresses),
+  // but give every screen a much taller window so a form's save button or
+  // a dashboard's lower cards are actually on screen and built, not culled
+  // by a lazy ListView's viewport.
+  tester.view.physicalSize = const Size(800, 2400);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+
   final txnRepo = FakeTransactionRepository();
   final catRepo = FakeCategoryRepository();
   final budgetRepo = FakeBudgetRepository();

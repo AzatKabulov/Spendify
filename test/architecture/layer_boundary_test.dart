@@ -59,9 +59,11 @@ void main() {
         final target = match.group(1)!;
 
         final isDataImport =
-            target.contains('data/') || target.startsWith('package:spendify/data/');
+            target.contains('data/') ||
+            target.startsWith('package:spendify/data/');
         final isForbiddenPackage = _forbiddenPackages.any(
-          (pkg) => target == 'package:$pkg' || target.startsWith('package:$pkg/'),
+          (pkg) =>
+              target == 'package:$pkg' || target.startsWith('package:$pkg/'),
         );
 
         if (isDataImport || isForbiddenPackage) {
