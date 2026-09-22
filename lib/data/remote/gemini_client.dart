@@ -23,7 +23,7 @@ class GeminiReceiptClient implements ReceiptScannerRepository {
   GeminiReceiptClient({
     required String apiKey,
     http.Client? httpClient,
-    String model = 'gemini-2.0-flash',
+    String model = 'gemini-3.6-flash',
     Duration timeout = const Duration(seconds: 30),
     Uri Function(String model)? endpoint,
   }) : _key = apiKey,

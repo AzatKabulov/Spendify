@@ -2,14 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/theme/insets.dart';
 import '../../domain/entities/advice_item.dart';
 import '../providers/advice_providers.dart';
+import '../widgets/advice/advice_widgets.dart';
+import '../widgets/auth/auth_illustrations.dart';
+import '../widgets/form_header.dart';
+import '../widgets/home/home_sections.dart';
+import '../widgets/pill_tabs.dart';
+import 'advice_chat_screen.dart';
+import 'advice_detail_screen.dart';
 
 /// "Insights" — AI-generated budgeting guidance from the user's own aggregated
-/// spending (Phase 9). The disclaimer that this is not financial advice is
-/// shown *with* the advice, never buried in settings (Phase 9 brief / CLAUDE.md
-/// §7). Offline shows the last cached advice with its timestamp — never an
-/// error screen, never an endless spinner.
+/// spending (Phase 9, restyled for the redesign). The disclaimer that this is
+/// not financial advice travels *with* the advice, never buried in settings
+/// (Phase 9 brief / CLAUDE.md §7). Offline shows the last cached advice with
+/// its timestamp — never an error screen, never an endless spinner.
 class AdviceScreen extends ConsumerStatefulWidget {
   const AdviceScreen({super.key});
 
@@ -18,6 +26,8 @@ class AdviceScreen extends ConsumerStatefulWidget {
 }
 
 class _AdviceScreenState extends ConsumerState<AdviceScreen> {
+  AdviceItemType? _tab; // null = "For You" (everything)
+
   @override
   void initState() {
     super.initState();
@@ -32,171 +42,245 @@ class _AdviceScreenState extends ConsumerState<AdviceScreen> {
   @override
   Widget build(BuildContext context) {
     final view = ref.watch(adviceControllerProvider);
-    final canRefresh = view.phase == AdvicePhase.ready && !view.busy;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Insights'),
-        actions: <Widget>[
-          IconButton(
-            tooltip: 'Refresh',
-            icon: const Icon(Icons.refresh),
-            onPressed: canRefresh ? _refresh : null,
-          ),
-        ],
-        bottom: view.busy
-            ? const PreferredSize(
-                preferredSize: Size.fromHeight(2),
-                child: LinearProgressIndicator(minHeight: 2),
-              )
-            : null,
+      body: SafeArea(
+        child: Column(
+          children: <Widget>[
+            const FormHeader(
+              title: 'Insights',
+              subtitle: 'Your personal AI financial advisor',
+            ),
+            Expanded(
+              child: switch (view.phase) {
+                AdvicePhase.loading => const AdviceStateView(
+                  icon: Icons.auto_awesome_outlined,
+                  title: 'Looking at your spending…',
+                ),
+                AdvicePhase.notConfigured => const AdviceStateView(
+                  icon: Icons.cloud_off_outlined,
+                  title: 'AI insights are off',
+                  body:
+                      'Turn on AI features in Settings → AI Settings to get '
+                      'advice from your spending. The rest of Spendify works '
+                      'without it.',
+                ),
+                AdvicePhase.notEnoughData => AdviceStateView(
+                  icon: Icons.eco_outlined,
+                  title: 'Keep logging for a few more days',
+                  body:
+                      "We'll have something useful to say once there's more "
+                      'to look at — ${view.transactionCount} of '
+                      '$kAdviceMinTransactions transactions so far.',
+                ),
+                AdvicePhase.emptyOffline => AdviceStateView(
+                  icon: Icons.wifi_off_outlined,
+                  title: "You're offline",
+                  body:
+                      'Connect to the internet to get your first insights. '
+                      'Everything else in Spendify works offline.',
+                  onRetry: _refresh,
+                ),
+                AdvicePhase.emptyError => AdviceStateView(
+                  icon: Icons.error_outline,
+                  title: "Couldn't generate advice",
+                  body: view.errorMessage ?? 'Try again in a little while.',
+                  onRetry: _refresh,
+                ),
+                AdvicePhase.ready => RefreshIndicator(
+                  onRefresh: _refresh,
+                  child: _InsightsBody(
+                    view: view,
+                    tab: _tab,
+                    onTabChanged: (t) => setState(() => _tab = t),
+                  ),
+                ),
+              },
+            ),
+          ],
+        ),
       ),
-      body: switch (view.phase) {
-        AdvicePhase.loading => const _Centered(
-          icon: Icons.auto_awesome_outlined,
-          title: 'Looking at your spending…',
-        ),
-        AdvicePhase.notConfigured => const _Centered(
-          icon: Icons.cloud_off_outlined,
-          title: 'AI insights are off',
-          body:
-              'Turn on AI features in Settings → Privacy & AI to get advice '
-              'from your spending. The rest of Spendify works without it.',
-        ),
-        AdvicePhase.notEnoughData => _Centered(
-          icon: Icons.eco_outlined,
-          title: 'Keep logging for a few more days',
-          body:
-              'We’ll have something useful to say once there’s more '
-              'to look at — ${view.transactionCount} of '
-              '$kAdviceMinTransactions transactions so far.',
-        ),
-        AdvicePhase.emptyOffline => _Centered(
-          icon: Icons.wifi_off_outlined,
-          title: 'You’re offline',
-          body:
-              'Connect to the internet to get your first insights. Everything '
-              'else in Spendify works offline.',
-          onRetry: _refresh,
-        ),
-        AdvicePhase.emptyError => _Centered(
-          icon: Icons.error_outline,
-          title: 'Couldn’t generate advice',
-          body: view.errorMessage ?? 'Try again in a little while.',
-          onRetry: _refresh,
-        ),
-        AdvicePhase.ready => RefreshIndicator(
-          onRefresh: _refresh,
-          child: _AdviceList(view: view),
-        ),
-      },
     );
   }
 }
 
-class _AdviceList extends StatelessWidget {
-  const _AdviceList({required this.view});
+class _InsightsBody extends StatelessWidget {
+  const _InsightsBody({
+    required this.view,
+    required this.tab,
+    required this.onTabChanged,
+  });
 
   final AdviceView view;
+  final AdviceItemType? tab;
+  final ValueChanged<AdviceItemType?> onTabChanged;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final filtered = tab == null
+        ? view.items
+        : view.items.where((i) => i.type == tab).toList(growable: false);
+
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      padding: const EdgeInsets.fromLTRB(Insets.md, 0, Insets.md, Insets.lg),
       children: <Widget>[
-        const _Disclaimer(),
-        const SizedBox(height: 12),
-        if (view.banner != null) ...<Widget>[
-          _Banner(text: view.banner!),
-          const SizedBox(height: 12),
-        ],
-        if (view.generatedAt != null)
-          Text(
-            'Last updated ${_relativeTime(view.generatedAt!)}',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+        HomeCard(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: <Color>[
+              scheme.primaryContainer.withValues(alpha: 0.85),
+              Colors.white,
+            ],
           ),
-        const SizedBox(height: 12),
-        if (view.items.isEmpty)
-          Text(
-            'No suggestions yet — pull down to refresh.',
-            style: theme.textTheme.bodyMedium,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              const SizedBox(
+                width: 64,
+                height: 82,
+                child: FittedBox(child: AssistantMascot()),
+              ),
+              const SizedBox(width: Insets.sm + 4),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'Smarter choices,\na brighter tomorrow.',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: Insets.xs),
+                    Text(
+                      'Personalised tips and recommendations based on your '
+                      'own spending habits.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: Insets.md - 2),
+        const AdviceDisclaimer(),
+        const SizedBox(height: Insets.md),
+        const Align(alignment: Alignment.centerRight, child: GeminiMark()),
+        const SizedBox(height: Insets.sm),
+        PillTabs<AdviceItemType?>(
+          values: const <AdviceItemType?>[
+            null,
+            AdviceItemType.spending,
+            AdviceItemType.saving,
+            AdviceItemType.budgeting,
+          ],
+          labelOf: (t) => t?.label ?? 'For You',
+          selected: tab,
+          onChanged: onTabChanged,
+          scrollable: true,
+        ),
+        const SizedBox(height: Insets.md),
+        Text(
+          'Key Insights',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: Insets.sm),
+        if (filtered.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: Insets.md),
+            child: Text(
+              tab == null
+                  ? 'No suggestions yet — pull down to refresh.'
+                  : "Nothing under ${tab!.label} right now — check For You.",
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
           )
         else
-          for (final item in view.items) ...<Widget>[
-            _AdviceCard(item: item),
-            const SizedBox(height: 12),
+          for (final item in filtered) ...<Widget>[
+            InsightCard(
+              item: item,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => AdviceDetailScreen(item: item),
+                ),
+              ),
+            ),
+            const SizedBox(height: Insets.sm),
           ],
+        if (view.banner != null) ...<Widget>[
+          const SizedBox(height: Insets.xs),
+          _Banner(text: view.banner!),
+        ],
+        if (view.generatedAt != null) ...<Widget>[
+          const SizedBox(height: Insets.sm),
+          Text(
+            'Generated ${DateFormat('d MMM, HH:mm').format(view.generatedAt!.toLocal())}',
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+        const SizedBox(height: Insets.md),
+        _AskCard(
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const AdviceChatScreen()),
+          ),
+        ),
       ],
     );
   }
 }
 
-class _AdviceCard extends StatelessWidget {
-  const _AdviceCard({required this.item});
+class _AskCard extends StatelessWidget {
+  const _AskCard({required this.onTap});
 
-  final AdviceItem item;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final hasTitle = item.title.isNotEmpty;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            if (hasTitle) ...<Widget>[
-              Row(
-                children: <Widget>[
-                  Icon(
-                    Icons.lightbulb_outline,
-                    size: 18,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(item.title, style: theme.textTheme.titleSmall),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-            ],
-            Text(item.body, style: theme.textTheme.bodyMedium),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Always shown with the advice (Phase 9 brief: not hidden in settings).
-class _Disclaimer extends StatelessWidget {
-  const _Disclaimer();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
+    final scheme = theme.colorScheme;
+    return HomeCard(
+      onTap: onTap,
+      gradient: LinearGradient(
+        colors: <Color>[scheme.primary, scheme.onPrimaryContainer],
       ),
       child: Row(
         children: <Widget>[
-          Icon(Icons.info_outline, size: 18, color: scheme.onSurfaceVariant),
-          const SizedBox(width: 8),
+          const Icon(Icons.chat_bubble_outline, color: Colors.white),
+          const SizedBox(width: Insets.sm + 4),
           Expanded(
-            child: Text(
-              'AI-generated guidance based on your spending. Not financial '
-              'advice.',
-              style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  'Ask Spendify AI',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                Text(
+                  'Get personalised advice about your finances',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.85),
+                  ),
+                ),
+              ],
             ),
           ),
+          const Icon(Icons.arrow_forward, color: Colors.white),
         ],
       ),
     );
@@ -212,10 +296,10 @@ class _Banner extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(Insets.sm + 4),
       decoration: BoxDecoration(
         color: scheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: <Widget>[
@@ -224,7 +308,7 @@ class _Banner extends StatelessWidget {
             size: 18,
             color: scheme.onSecondaryContainer,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: Insets.sm),
           Expanded(
             child: Text(
               text,
@@ -235,71 +319,4 @@ class _Banner extends StatelessWidget {
       ),
     );
   }
-}
-
-class _Centered extends StatelessWidget {
-  const _Centered({
-    required this.icon,
-    required this.title,
-    this.body,
-    this.onRetry,
-  });
-
-  final IconData icon;
-  final String title;
-  final String? body;
-  final Future<void> Function()? onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Icon(icon, size: 56, color: theme.colorScheme.outline),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: theme.textTheme.titleMedium,
-              textAlign: TextAlign.center,
-            ),
-            if (body != null) ...<Widget>[
-              const SizedBox(height: 8),
-              Text(
-                body!,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-            if (onRetry != null) ...<Widget>[
-              const SizedBox(height: 20),
-              FilledButton.tonalIcon(
-                onPressed: onRetry,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Try again'),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-String _relativeTime(DateTime at) {
-  final now = DateTime.now();
-  final diff = now.difference(at);
-  if (diff.inMinutes < 1) return 'just now';
-  if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
-  if (diff.inHours < 24) {
-    return '${diff.inHours} hour${diff.inHours == 1 ? '' : 's'} ago';
-  }
-  if (diff.inDays == 1) return 'yesterday';
-  if (diff.inDays < 7) return '${diff.inDays} days ago';
-  return DateFormat('d MMM yyyy').format(at.toLocal());
 }

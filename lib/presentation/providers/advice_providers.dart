@@ -50,23 +50,30 @@ final adviceCoordinatorProvider = Provider<AdviceCoordinator>((ref) {
   );
 });
 
-/// The exact aggregated summary that advice generation would send to Gemini,
-/// built from the current data. Powers the Phase 10 "See exactly what is sent"
-/// transparency view. Reads repositories directly (a `StreamProvider` snapshot
-/// can still be loading).
-final adviceSummaryPreviewProvider = FutureProvider<AdviceSummary>((ref) async {
-  final uid = ref.watch(currentUserIdProvider);
+/// The exact aggregated summary that advice generation (or a chat message)
+/// would send to Gemini right now, built fresh from the current data. Shared
+/// by the Insights controller, the "Ask Spendify AI" chat controller, and the
+/// Phase 10 "See exactly what is sent" transparency view. Reads repositories
+/// directly, not a `StreamProvider` snapshot (which can still be loading).
+Future<AdviceSummary> currentAdviceSummary(Ref ref) async {
+  final uid = ref.read(currentUserIdProvider);
   final aggregates =
-      (await ref.watch(periodAggregateRepositoryProvider).getAll())
+      (await ref.read(periodAggregateRepositoryProvider).getAll())
           .where((a) => a.userId == uid)
           .toList(growable: false);
   return buildAdviceSummary(
     aggregates: aggregates,
-    budgets: await ref.watch(budgetRepositoryProvider).getAll(),
-    categories: await ref.watch(categoryRepositoryProvider).getAll(),
-    now: ref.watch(localTimeProvider)(),
+    budgets: await ref.read(budgetRepositoryProvider).getAll(),
+    categories: await ref.read(categoryRepositoryProvider).getAll(),
+    now: ref.read(localTimeProvider)(),
   );
-});
+}
+
+/// [currentAdviceSummary] as a provider, for widgets that just want to watch
+/// it — the Phase 10 "See exactly what is sent" transparency view.
+final adviceSummaryPreviewProvider = FutureProvider<AdviceSummary>(
+  (ref) => currentAdviceSummary(ref),
+);
 
 // --- view state -----------------------------------------------------
 

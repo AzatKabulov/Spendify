@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:spendify/data/remote/gemini_advice_client.dart';
+import 'package:spendify/domain/entities/advice_item.dart';
 import 'package:spendify/domain/entities/budget.dart';
 import 'package:spendify/domain/entities/category.dart';
 import 'package:spendify/domain/entities/enums.dart';
@@ -254,6 +255,126 @@ void main() {
       client.generate(_summary()),
       throwsA(isA<AdviceNetworkException>()),
     );
+  });
+
+  group('per-item type (Insights tabs)', () {
+    test('a classified item keeps its type', () async {
+      final client = _client(
+        MockClient(
+          (_) async => http.Response(
+            _geminiResponse(
+              '{"advice":[{"title":"Trim Food","body":"Ease off a bit.",'
+              '"type":"spending"}]}',
+            ),
+            200,
+          ),
+        ),
+      );
+      final items = await client.generate(_summary());
+      expect(items.single.type, AdviceItemType.spending);
+    });
+
+    test('an unrecognised or missing type defaults to general', () async {
+      final client = _client(
+        MockClient(
+          (_) async => http.Response(
+            _geminiResponse('{"advice":[{"title":"x","body":"y"}]}'),
+            200,
+          ),
+        ),
+      );
+      final items = await client.generate(_summary());
+      expect(items.single.type, AdviceItemType.general);
+    });
+  });
+
+  group('ask (Ask Spendify AI chat)', () {
+    test('sends the summary, history and question as plain text', () async {
+      late String sentText;
+      final client = _client(
+        MockClient((req) async {
+          final body = jsonDecode(req.body) as Map<String, dynamic>;
+          // Plain-text reply, not the strict advice JSON schema.
+          expect(
+            (body['generationConfig'] as Map).containsKey('responseMimeType'),
+            isFalse,
+          );
+          final parts = (body['contents'] as List).first['parts'] as List;
+          sentText = parts.first['text'] as String;
+          return http.Response(
+            _geminiResponse('Try trimming Food by about RM 40 this month.'),
+            200,
+          );
+        }),
+      );
+
+      final reply = await client.ask(
+        summary: _summary(),
+        question: 'How can I save more?',
+        history: const [
+          AdviceChatTurn(isUser: false, text: "Hi! I'm Spendify AI."),
+        ],
+      );
+
+      expect(reply, 'Try trimming Food by about RM 40 this month.');
+      expect(sentText, contains('How can I save more?'));
+      expect(sentText, contains("Hi! I'm Spendify AI."));
+      expect(sentText, contains('Food')); // real category name from summary
+      // still no transaction-level or identifying data in a chat request
+      for (final forbidden in <String>['cat-food', 'local-user', 'merchant']) {
+        expect(sentText, isNot(contains(forbidden)));
+      }
+    });
+
+    test('no API key -> AdviceUnavailableException, no HTTP call', () async {
+      var called = false;
+      final client = _client(
+        MockClient((_) async {
+          called = true;
+          return http.Response('{}', 200);
+        }),
+        apiKey: '',
+      );
+      await expectLater(
+        client.ask(summary: _summary(), question: 'Help?'),
+        throwsA(isA<AdviceUnavailableException>()),
+      );
+      expect(called, isFalse);
+    });
+
+    test('HTTP 429 -> AdviceRateLimitedException', () async {
+      final client = _client(
+        MockClient((_) async => http.Response('busy', 429)),
+      );
+      await expectLater(
+        client.ask(summary: _summary(), question: 'Help?'),
+        throwsA(isA<AdviceRateLimitedException>()),
+      );
+    });
+
+    test('only the last 6 history turns are sent', () async {
+      late String sentText;
+      final client = _client(
+        MockClient((req) async {
+          final body = jsonDecode(req.body) as Map<String, dynamic>;
+          final parts = (body['contents'] as List).first['parts'] as List;
+          sentText = parts.first['text'] as String;
+          return http.Response(_geminiResponse('ok'), 200);
+        }),
+      );
+      await client.ask(
+        summary: _summary(),
+        question: 'Help?',
+        history: <AdviceChatTurn>[
+          for (var i = 0; i < 10; i++)
+            AdviceChatTurn(isUser: i.isEven, text: 'turn-$i'),
+        ],
+      );
+      expect(sentText, isNot(contains('turn-0')));
+      expect(sentText, isNot(contains('turn-3')));
+      expect(sentText, contains('turn-4'));
+      expect(sentText, contains('turn-9'));
+    });
   });
 }
 

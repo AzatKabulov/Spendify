@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:spendify/domain/entities/advice_item.dart';
 import 'package:spendify/domain/services/advice_json_parser.dart';
 
 void main() {
@@ -95,5 +96,36 @@ void main() {
       '{"advice":[{"title":"Note","body":"spend under {limit} each week"}]}',
     );
     expect(items.single.body, 'spend under {limit} each week');
+  });
+
+  group('type (Insights tabs)', () {
+    test('a recognised type is kept', () {
+      final items = parseAdviceJson(
+        '{"advice":[{"title":"a","body":"b","type":"saving"}]}',
+      );
+      expect(items.single.type, AdviceItemType.saving);
+    });
+
+    test('is case-insensitive and accepts the plural "savings"', () {
+      final items = parseAdviceJson(
+        '{"advice":[{"title":"a","body":"b","type":"SAVINGS"}]}',
+      );
+      expect(items.single.type, AdviceItemType.saving);
+    });
+
+    test('missing or unrecognised -> general, not a crash', () {
+      final missing = parseAdviceJson('{"advice":[{"title":"a","body":"b"}]}');
+      expect(missing.single.type, AdviceItemType.general);
+
+      final unknown = parseAdviceJson(
+        '{"advice":[{"title":"a","body":"b","type":"investment"}]}',
+      );
+      expect(unknown.single.type, AdviceItemType.general);
+    });
+
+    test('a legacy plain-string item has no type opinion (general)', () {
+      final items = parseAdviceJson('{"advice":["Just track your spend."]}');
+      expect(items.single.type, AdviceItemType.general);
+    });
   });
 }

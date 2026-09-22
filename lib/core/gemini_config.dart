@@ -16,9 +16,14 @@ library;
 
 const String kGeminiApiKey = String.fromEnvironment('GEMINI_API_KEY');
 
-/// Which Gemini model the receipt scanner calls. Bump when a newer flash model
-/// ships.
+/// Which Gemini model the receipt scanner and advice generator call. Bump
+/// when a newer flash model ships — `gemini-2.0-flash` was retired by Google
+/// (confirmed live 2026-09-16: the API now returns 404 for it, directing
+/// callers to `gemini-3.6-flash`). Verified live against both call shapes
+/// this app actually uses (plain text and `responseMimeType: application/
+/// json`) before switching the default — a dead model name would have
+/// silently broken both AI features.
 const String kGeminiModel = String.fromEnvironment(
   'GEMINI_MODEL',
-  defaultValue: 'gemini-2.0-flash',
+  defaultValue: 'gemini-3.6-flash',
 );

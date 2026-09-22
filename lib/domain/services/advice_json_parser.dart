@@ -105,10 +105,13 @@ AdviceItem? _coerceItem(Object? entry) {
   final body = _cleanString(
     entry['body'] ?? entry['text'] ?? entry['detail'] ?? entry['description'],
   );
+  final type = AdviceItemType.fromWire(
+    _cleanString(entry['type'] ?? entry['category']),
+  );
 
   if (body == null && title == null) return null;
-  if (body == null) return AdviceItem(title: '', body: title!);
-  return AdviceItem(title: title ?? '', body: body);
+  if (body == null) return AdviceItem(title: '', body: title!, type: type);
+  return AdviceItem(title: title ?? '', body: body, type: type);
 }
 
 String? _cleanString(Object? v) {

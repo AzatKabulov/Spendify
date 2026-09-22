@@ -15,6 +15,32 @@ abstract interface class AdviceGeneratorRepository {
   /// [AdviceGenerationException] on a transport/API failure; the caller then
   /// falls back to the last cached advice.
   Future<List<AdviceItem>> generate(AdviceSummary summary);
+
+  /// "Ask Spendify AI" (redesign addition, flagged — see
+  /// `docs/` note in CLAUDE.md §9). Answers a free-text [question] grounded in
+  /// the same aggregated [summary] plus the recent [history] of the current
+  /// conversation only. Throws [AdviceGenerationException] on failure.
+  ///
+  /// **Ethics (CLAUDE.md §7):** exactly the same data-minimisation rule as
+  /// [generate] — only the aggregated summary ever leaves the device, never a
+  /// transaction row. [history] is turns of this on-screen conversation, held
+  /// in memory for the session only; nothing here queries any other data, so
+  /// a question cannot pull in more than the summary already contains.
+  Future<String> ask({
+    required AdviceSummary summary,
+    required String question,
+    List<AdviceChatTurn> history = const <AdviceChatTurn>[],
+  });
+}
+
+/// One turn of the on-screen "Ask Spendify AI" conversation — never persisted
+/// (CLAUDE.md §7 data minimisation; also avoids a new synced entity for a
+/// capstone-scope feature). See [AdviceGeneratorRepository.ask].
+class AdviceChatTurn {
+  const AdviceChatTurn({required this.isUser, required this.text});
+
+  final bool isUser;
+  final String text;
 }
 
 /// Why advice generation failed. Each maps to a short, non-alarming message;

@@ -6,6 +6,7 @@ import 'package:spendify/domain/entities/advice_record.dart';
 import 'package:spendify/domain/entities/enums.dart';
 import 'package:spendify/domain/entities/period_aggregate.dart';
 import 'package:spendify/presentation/providers/advice_providers.dart';
+import 'package:spendify/presentation/screens/advice_detail_screen.dart';
 import 'package:spendify/presentation/screens/advice_screen.dart';
 import 'package:spendify/presentation/screens/home_screen.dart';
 
@@ -95,7 +96,7 @@ void main() {
         findsOneWidget,
         reason: 'disclaimer must be visible with the advice',
       );
-      expect(find.textContaining('Last updated'), findsOneWidget);
+      expect(find.textContaining('Generated'), findsOneWidget);
     },
   );
 
@@ -167,7 +168,62 @@ void main() {
     expect(repos.adviceGenerator.calls, 0);
   });
 
-  testWidgets('"Insights" appears in the home menu when configured', (
+  testWidgets('the type tabs filter Key Insights; "For You" shows everything', (
+    tester,
+  ) async {
+    final repos = await pumpSpendify(
+      tester,
+      home: const AdviceScreen(),
+      geminiApiKey: 'test-key',
+    );
+    repos.adviceGenerator.next = const [
+      AdviceItem(
+        title: 'Ease off Food',
+        body: '…',
+        type: AdviceItemType.spending,
+      ),
+      AdviceItem(
+        title: 'Great savings month',
+        body: '…',
+        type: AdviceItemType.saving,
+      ),
+    ];
+    await _seedEnoughData(tester, repos);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ease off Food'), findsOneWidget);
+    expect(find.text('Great savings month'), findsOneWidget);
+
+    await tester.tap(find.text('Saving'));
+    await tester.pumpAndSettle();
+    expect(find.text('Ease off Food'), findsNothing);
+    expect(find.text('Great savings month'), findsOneWidget);
+
+    await tester.tap(find.text('For You'));
+    await tester.pumpAndSettle();
+    expect(find.text('Ease off Food'), findsOneWidget);
+    expect(find.text('Great savings month'), findsOneWidget);
+  });
+
+  testWidgets('tapping an insight opens its detail screen', (tester) async {
+    final repos = await pumpSpendify(
+      tester,
+      home: const AdviceScreen(),
+      geminiApiKey: 'test-key',
+    );
+    await _seedEnoughData(tester, repos);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Ease off Food a little'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AdviceDetailScreen), findsOneWidget);
+  });
+
+  // Insights is not a bottom-nav tab: the fourth slot is Reports, as in the
+  // approved mockup. The AI entry points are the Home AI card and
+  // Reports -> Trends -> Insights.
+  testWidgets('the Home AI card opens Insights when configured', (
     tester,
   ) async {
     await pumpSpendify(
@@ -175,24 +231,32 @@ void main() {
       home: const HomeScreen(),
       geminiApiKey: 'test-key',
     );
-
-    await tester.tap(find.byType(PopupMenuButton<int>));
     await tester.pumpAndSettle();
-    expect(find.text('Insights'), findsOneWidget);
 
-    await tester.tap(find.text('Insights'));
+    final card = find.text('Spendify AI');
+    expect(card, findsOneWidget);
+
+    await tester.tap(card);
     await tester.pumpAndSettle();
     expect(find.byType(AdviceScreen), findsOneWidget);
   });
 
-  testWidgets('"Insights" is hidden when no API key is configured', (
+  testWidgets('no AI entry point at all when no API key is configured', (
     tester,
   ) async {
     await pumpSpendify(tester, home: const HomeScreen());
-
-    await tester.tap(find.byType(PopupMenuButton<int>));
     await tester.pumpAndSettle();
-    expect(find.text('Insights'), findsNothing);
-    expect(find.text('Settings'), findsOneWidget);
+
+    expect(find.text('Spendify AI'), findsNothing);
+
+    final nav = find.byType(NavigationBar);
+    expect(
+      find.descendant(of: nav, matching: find.text('Insights')),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: nav, matching: find.text('Reports')),
+      findsOneWidget,
+    );
   });
 }

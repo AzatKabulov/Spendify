@@ -21,7 +21,7 @@ class GeminiAdviceClient implements AdviceGeneratorRepository {
   GeminiAdviceClient({
     required String apiKey,
     http.Client? httpClient,
-    String model = 'gemini-2.0-flash',
+    String model = 'gemini-3.6-flash',
     Duration timeout = const Duration(seconds: 30),
     Uri Function(String model)? endpoint,
   }) : _key = apiKey,
@@ -63,23 +63,94 @@ Rules:
   encouraging and matter-of-fact. If they are doing well, say so and suggest how
   to keep it up.
 - Keep each suggestion short.
+- Classify each suggestion's "type" as exactly one of "spending" (a pattern in
+  what they spend on), "saving" (an opportunity or a win worth banking), or
+  "budgeting" (tied to a limit in the summary). If truly none fits, omit "type".
 
 Return ONLY a strict JSON object, no markdown, no code fences, no commentary:
-{ "advice": [ { "title": string, "body": string } ] }
+{ "advice": [ { "title": string, "body": string, "type": string } ] }
 "title": a short phrase, at most 6 words.
 "body": 1 to 3 sentences.
+"type": one of "spending" | "saving" | "budgeting".
+
+SUMMARY:
+''';
+
+  static const String _chatPrompt = '''
+You are Spendify AI, a friendly, non-judgemental budgeting assistant for a
+student or young adult in Malaysia, speaking inside a chat window in the
+Spendify app. All amounts are in Malaysian Ringgit (RM).
+
+Below is an AGGREGATED summary of the user's spending for the current
+period — category totals, trends and budget adherence only, never individual
+purchases — followed by the recent conversation and the user's new question.
+
+Rules:
+- Ground every specific figure you mention in the summary below. Do not invent
+  numbers that are not in it.
+- Do NOT recommend any financial product, investment, loan, credit card, bank,
+  insurance or provider.
+- Never use shaming or judgemental language about how they spend.
+- You cannot see individual transactions, and you cannot create, edit or
+  delete anything in their account — you can only talk. If asked to do
+  something the app would need to act on (like creating a budget), describe
+  what to do in the app rather than claiming you did it.
+- Keep your reply conversational and short — a few sentences, plus a short
+  list only if it genuinely helps.
+- Reply in plain text. No markdown headers, no code fences.
 
 SUMMARY:
 ''';
 
   @override
   Future<List<AdviceItem>> generate(AdviceSummary summary) async {
+    final promptText =
+        '$_prompt${const JsonEncoder.withIndent('  ').convert(summary.toJson())}';
+    final text = await _generateText(promptText, asJson: true);
+
+    try {
+      return parseAdviceJson(text);
+    } on AdviceUnparseableException catch (e) {
+      throw AdviceApiException('Could not read the advice response.', cause: e);
+    }
+  }
+
+  @override
+  Future<String> ask({
+    required AdviceSummary summary,
+    required String question,
+    List<AdviceChatTurn> history = const <AdviceChatTurn>[],
+  }) async {
+    final buffer = StringBuffer(_chatPrompt)
+      ..write(const JsonEncoder.withIndent('  ').convert(summary.toJson()));
+
+    // Only the last few turns — enough for context, small enough to bound
+    // the prompt (this is a chat, not a transcript archive).
+    final recent = history.length > 6
+        ? history.sublist(history.length - 6)
+        : history;
+    if (recent.isNotEmpty) {
+      buffer.write('\n\nCONVERSATION SO FAR:\n');
+      for (final turn in recent) {
+        buffer.write('${turn.isUser ? 'User' : 'Spendify AI'}: ${turn.text}\n');
+      }
+    }
+    buffer.write('\nUser: $question\nSpendify AI:');
+
+    final text = await _generateText(buffer.toString(), asJson: false);
+    return text.trim();
+  }
+
+  /// The POST + status/safety checks + candidate-text extraction shared by
+  /// [generate] and [ask]. [asJson] only changes the response format Gemini
+  /// is asked for — the transport and error handling are identical.
+  Future<String> _generateText(
+    String promptText, {
+    required bool asJson,
+  }) async {
     if (_key.isEmpty) {
       throw const AdviceUnavailableException();
     }
-
-    final promptText =
-        '$_prompt${const JsonEncoder.withIndent('  ').convert(summary.toJson())}';
 
     final requestBody = jsonEncode(<String, Object?>{
       'contents': <Object?>[
@@ -91,7 +162,7 @@ SUMMARY:
       ],
       'generationConfig': <String, Object?>{
         'temperature': 0.4,
-        'responseMimeType': 'application/json',
+        if (asJson) 'responseMimeType': 'application/json',
       },
     });
 
@@ -135,12 +206,7 @@ SUMMARY:
     if (text == null || text.trim().isEmpty) {
       throw const AdviceBlockedException();
     }
-
-    try {
-      return parseAdviceJson(text);
-    } on AdviceUnparseableException catch (e) {
-      throw AdviceApiException('Could not read the advice response.', cause: e);
-    }
+    return text;
   }
 
   void _checkStatus(http.Response r) {

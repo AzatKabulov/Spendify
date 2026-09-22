@@ -12,4 +12,11 @@ class UnavailableAdviceGenerator implements AdviceGeneratorRepository {
   @override
   Future<List<AdviceItem>> generate(AdviceSummary summary) async =>
       throw const AdviceUnavailableException();
+
+  @override
+  Future<String> ask({
+    required AdviceSummary summary,
+    required String question,
+    List<AdviceChatTurn> history = const <AdviceChatTurn>[],
+  }) async => throw const AdviceUnavailableException();
 }
