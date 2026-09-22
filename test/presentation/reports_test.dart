@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:spendify/core/constants.dart';
 import 'package:spendify/domain/entities/enums.dart';
 import 'package:spendify/domain/entities/transaction.dart';
+import 'package:spendify/presentation/screens/category_breakdown_screen.dart';
 import 'package:spendify/presentation/screens/reports_screen.dart';
 
 import '../support/widget_test_scaffold.dart';
@@ -23,8 +24,22 @@ Transaction _txn(
   now: DateTime.utc(2026, 9, 8, 12),
 );
 
+/// Opens the period picker sheet — where the prev/next arrows now live.
+/// Taps the chip's icon rather than the widget: `PeriodChip` is a left-aligned
+/// pill inside a full-width `Align`, so the widget's centre is off the pill.
+Future<void> _openPeriodPicker(WidgetTester tester) async {
+  await tester.tap(find.byIcon(Icons.calendar_today_outlined));
+  await tester.pumpAndSettle();
+}
+
+/// The arrow button carrying [tooltip] inside the period picker sheet.
+Finder _arrow(String tooltip) => find.ancestor(
+  of: find.byTooltip(tooltip),
+  matching: find.byType(IconButton),
+);
+
 void main() {
-  testWidgets('renders the summary, pie and breakdown for a period with data', (
+  testWidgets('renders the overview figures for a period with data', (
     tester,
   ) async {
     // Local clock is pinned to 2026-09-15, so the screen opens on Sep 2026
@@ -60,36 +75,29 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Summary header figures come straight from the cached aggregate.
+    // The period the screen opened on, and the headline figures — all
+    // straight from the cached aggregates.
+    expect(find.text('September 2026'), findsOneWidget);
+    expect(find.text('Total Spending'), findsOneWidget);
+    // Twice: the headline figure, and the label on the current trend bar.
+    expect(find.text('RM 80.00'), findsWidgets); // total expense
     expect(find.text('RM 200.00'), findsOneWidget); // income
-    expect(find.text('RM 80.00'), findsOneWidget); // total expense
-
-    // Sections that only appear when there is spend.
-    expect(find.text('Where it went'), findsOneWidget);
-    expect(find.text('Spending over time'), findsOneWidget);
+    expect(find.text('RM 120.00'), findsOneWidget); // net
 
     // The empty state must NOT be showing.
     expect(find.text('No transactions this period'), findsNothing);
 
-    // "Next" is disabled because we are already on the current month.
-    final nextButton = tester.widget<IconButton>(
-      find.widgetWithIcon(IconButton, Icons.chevron_right),
-    );
-    expect(nextButton.onPressed, isNull);
-
-    // Category breakdown lives below the fold — scroll it into view. Largest
-    // first, with names + amounts.
-    final listView = find.byType(Scrollable).first;
-    await tester.scrollUntilVisible(
-      find.text('Food'),
-      200,
-      scrollable: listView,
-    );
-    expect(find.text('By category'), findsOneWidget);
+    // Top categories, largest first, with names + amounts.
+    expect(find.text('Top Categories'), findsOneWidget);
     expect(find.text('Food'), findsOneWidget);
     expect(find.text('Transport'), findsOneWidget);
     expect(find.text('RM 50.00'), findsOneWidget);
     expect(find.text('RM 30.00'), findsOneWidget);
+
+    // "Next" is disabled because we are already on the current month.
+    await _openPeriodPicker(tester);
+    final next = tester.widget<IconButton>(_arrow('Next period'));
+    expect(next.onPressed, isNull);
   });
 
   testWidgets('shows a clear empty state for a period with no transactions', (
@@ -100,13 +108,13 @@ void main() {
 
     expect(find.text('No transactions this period'), findsOneWidget);
     expect(
-      find.text('Use the arrows above to look at another week, month or year.'),
+      find.text('Pick another week, month or year to look at.'),
       findsOneWidget,
     );
 
     // None of the data sections render.
-    expect(find.text('By category'), findsNothing);
-    expect(find.text('Where it went'), findsNothing);
+    expect(find.text('Total Spending'), findsNothing);
+    expect(find.text('Top Categories'), findsNothing);
   });
 
   testWidgets('navigating to a previous empty period shows the empty state', (
@@ -126,15 +134,29 @@ void main() {
     expect(find.text('No transactions this period'), findsNothing);
 
     // Step back to August 2026 — nothing was logged there.
-    await tester.tap(find.byTooltip('Previous period'));
+    await _openPeriodPicker(tester);
+    await tester.tap(_arrow('Previous period'));
+    await tester.pumpAndSettle();
+    // Both the chip behind the sheet and the sheet's own label.
+    expect(find.text('August 2026'), findsWidgets);
+
+    await tester.tap(_arrow('Next period'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Jump to today'));
     await tester.pumpAndSettle();
 
-    expect(find.text('No transactions this period'), findsOneWidget);
-
-    // And forward again restores the populated view.
-    await tester.tap(find.byTooltip('Next period'));
-    await tester.pumpAndSettle();
     expect(find.text('No transactions this period'), findsNothing);
-    expect(find.text('RM 50.00'), findsOneWidget);
+    expect(find.text('RM 50.00'), findsWidgets);
+  });
+
+  testWidgets('the Categories tab opens the breakdown screen', (tester) async {
+    await pumpSpendify(tester, home: const ReportsScreen());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Categories'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CategoryBreakdownScreen), findsOneWidget);
+    expect(find.text('Category Breakdown'), findsOneWidget);
   });
 }

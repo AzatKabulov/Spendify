@@ -42,23 +42,35 @@ class ReportBreakdownList extends StatelessWidget {
               minHeight: 4,
               backgroundColor: theme.colorScheme.surfaceContainerHighest,
             ),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: <Widget>[
-                Text(
-                  formatMinor(slice.expenseMinor),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontFeatures: const [FontFeature.tabularFigures()],
+            // `ListTile`'s trailing slot has a fixed height budget that
+            // doesn't grow with text scale; the category name (the primary
+            // information) already scales fully as the tile's title, so
+            // this secondary two-line figure is capped rather than left to
+            // overflow that fixed slot.
+            trailing: MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: MediaQuery.textScalerOf(
+                  context,
+                ).clamp(maxScaleFactor: 1.2),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: <Widget>[
+                  Text(
+                    formatMinor(slice.expenseMinor),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
                   ),
-                ),
-                Text(
-                  '${(slice.fractionOfExpense * 100).round()}%',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                  Text(
+                    '${(slice.fractionOfExpense * 100).round()}%',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
       ],
