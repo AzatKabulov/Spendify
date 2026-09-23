@@ -25,18 +25,25 @@
 //
 //   dart run scripts/firestore_rules_probe.dart
 //
-// The API key below is Firebase's public client-config `apiKey` (identical
-// to the one in lib/firebase_options.dart) — not a secret; see
-// docs/SECURITY_AUDIT.md's note on why this specific value is safe to embed.
-// Duplicated here rather than imported so this script has zero dependency on
-// the Flutter package graph and can run on a bare `dart` SDK.
+// The API key this script needs is Firebase's public client-config
+// `apiKey` (identical to the one in lib/firebase_options.dart) — not a
+// secret; see docs/SECURITY_AUDIT.md's note on why this specific value is
+// safe to embed in a client at all. It is read from
+// android/app/google-services.json at runtime rather than hardcoded here,
+// for two reasons that have nothing to do with the key being sensitive:
+// this repo's own policy (CLAUDE.md §8) is that no key lives in tracked
+// source, full stop, regardless of the key's sensitivity, and reading it
+// from the same config file the app itself uses means this script can
+// never drift onto a stale value if the Firebase project is ever
+// reconfigured. Zero dependency on the Flutter package graph is kept —
+// this only needs dart:io to read a JSON file, so it still runs on a bare
+// `dart` SDK, no `flutter pub get` required.
 
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
-const _apiKey = 'REDACTED-FIREBASE-CLIENT-KEY-SEE-git-log';
 const _projectId = 'spendify-2e8f9';
 const _authBase = 'https://identitytoolkit.googleapis.com/v1';
 const _firestoreBase =
@@ -44,6 +51,29 @@ const _firestoreBase =
 
 final _http = http.Client();
 final _results = <String, bool>{};
+
+/// Read once, on first use (top-level `final` is already lazy) — every
+/// `_signUp` / `_deleteAccount` call below references this exactly as it
+/// referenced the old hardcoded constant.
+final String _apiKey = _readApiKey();
+
+String _readApiKey() {
+  const path = 'android/app/google-services.json';
+  final file = File(path);
+  if (!file.existsSync()) {
+    stderr.writeln(
+      'Could not find $path — this script reads the Firebase project\'s '
+      'public client key from it (same file the app itself uses via '
+      '`flutterfire configure`). Run from the repo root with that file '
+      'present.',
+    );
+    exit(2);
+  }
+  final json = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
+  final client = (json['client'] as List).first as Map<String, dynamic>;
+  final apiKeys = client['api_key'] as List;
+  return (apiKeys.first as Map<String, dynamic>)['current_key'] as String;
+}
 
 Future<void> main() async {
   final stamp = DateTime.now().millisecondsSinceEpoch;
@@ -109,7 +139,7 @@ Future<void> main() async {
       'B is REJECTED reading A\'s document',
       crossReadStatus == 403,
       'expected 403 (PERMISSION_DENIED), got $crossReadStatus — '
-      'this would be a real cross-user data leak',
+          'this would be a real cross-user data leak',
     );
 
     print('\n[5] As B: attempting to OVERWRITE A\'s document...');
@@ -123,7 +153,7 @@ Future<void> main() async {
       'B is REJECTED overwriting A\'s document',
       crossWriteStatus == 403,
       'expected 403 (PERMISSION_DENIED), got $crossWriteStatus — '
-      'this would let one user corrupt another\'s data',
+          'this would let one user corrupt another\'s data',
     );
 
     print(
