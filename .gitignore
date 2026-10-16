@@ -70,3 +70,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Local Kotlin compiler/session cache created by Android builds.
+/android/.kotlin/

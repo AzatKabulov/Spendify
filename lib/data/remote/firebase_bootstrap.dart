@@ -28,7 +28,7 @@ class FirebaseBootstrapResult {
   bool get isReady => availability == FirebaseAvailability.ready;
 }
 
-/// `true` while [firebase_options.dart] still holds the checked-in placeholder
+/// `true` while the local firebase_options.dart holds the example placeholder
 /// values. A real `flutterfire configure` project id never contains
 /// "placeholder".
 bool looksLikePlaceholder(FirebaseOptions options) =>

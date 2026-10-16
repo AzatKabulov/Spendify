@@ -7,9 +7,24 @@ anything. Until then the app still builds and runs — sign-in just shows
 "Sign-in is not available in this build yet", and Settings' backup section
 shows "Backup not set up".
 
-`flutter analyze` and `flutter test` pass **without** any of this, because
-`lib/firebase_options.dart` ships as a committed-locally placeholder (it is
-gitignored, like `google-services.json`).
+For local development without Firebase, first copy the tracked placeholder:
+
+```sh
+cp lib/firebase_options.example.dart lib/firebase_options.dart
+```
+
+On PowerShell, use `Copy-Item lib/firebase_options.example.dart lib/firebase_options.dart`.
+Do this only when the local file does not already exist: copying over a real
+configuration replaces it. `lib/firebase_options.dart` remains gitignored.
+The example deliberately disables Firebase initialization; it contains no
+working project configuration. Static analysis and tests can then run without
+a Firebase project. Use `flutter run --dart-define=DEMO_SEED=true` on a fresh
+emulator to explore the app with sample records and a local demo session.
+
+Android applies the Google Services plugin only when
+`android/app/google-services.json` is present. When you connect a real project
+below, FlutterFire replaces the local Dart options and supplies that Android
+configuration; neither file should be committed.
 
 ## One-time setup (~15 min)
 

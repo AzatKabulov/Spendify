@@ -1,163 +1,126 @@
+<img src="assets/icon/icon.png" alt="Spendify wallet mascot" width="80" />
+
 # Spendify
 
-**AI-powered, offline-first Android budgeting app for students and young adults
-in Malaysia.** Final-year capstone project (Capstone Project 2).
+An offline-first Android budgeting app for students and young adults in Malaysia.
 
-Spendify automates expense recording with AI receipt scanning, works fully
-offline for every core feature, and uses gamification plus AI-generated advice
-to sustain long-term engagement — without the compulsive-checking patterns that
-usually come with it.
+I built Spendify as my final-year capstone project to make everyday expense tracking easier to keep up with. It combines quick transaction entry, spending limits, reports, and optional AI receipt scanning in one app. The core budgeting workflow runs on local storage, so recording an expense does not depend on a network connection.
 
----
+**Flutter · Riverpod · Hive · Firebase · Google Gemini**
 
-## What it does
+[Screenshots](#screenshots) · [Run locally](#run-locally) · [Architecture](#architecture) · [Development guide](docs/DEVELOPMENT.md)
 
-| Feature | Notes |
-|---|---|
-| Manual transactions | amount, type, category, date, optional note; today + last category pre-filled |
-| Receipt scanning | photo → Gemini extracts amount/date/merchant → **you confirm every field** before it saves |
-| Custom categories | create / edit / delete, with icon + colour; defaults are seeded and locked |
-| Budgets | per-category or overall, weekly or monthly, with "approaching" and "exceeded" warnings |
-| Reports | weekly / monthly / yearly, from a cached aggregate table (never a full re-scan) |
-| Gamification | XP, coins, levels, badges and login streaks — rewards *budgeting behaviour*, not app opens |
-| AI advice | personalised suggestions from an **aggregated, rounded** summary of your own spending |
-| Sync | local Hive is the source of truth; Firestore is an opportunistic backup/restore target |
+## Screenshots
 
-Everything above works with **zero connectivity** except the two AI features,
-which degrade gracefully (clear message, manual fallback, last cached advice).
+| Home | Budgets | Reports |
+| :---: | :---: | :---: |
+| <img src="docs/images/home.png" alt="Spendify home with balance, spending summary, and quick actions" width="250" /> | <img src="docs/images/budgets.png" alt="Spendify budgets showing spending against category limits" width="250" /> | <img src="docs/images/reports.png" alt="Spendify reports with spending charts and category totals" width="250" /> |
 
----
+Captured from the Android app using synthetic demo records. The amounts and dates illustrate the interface; they are not personal financial data. AI features are disabled in this preview. [Capture details](docs/images/README.md).
 
-## Tech stack
+## Features
 
-| Layer | Choice |
-|---|---|
-| Client | Flutter (Dart), **Android only** |
-| Local storage | Hive, AES-encrypted; key in the Android Keystore via `flutter_secure_storage` |
-| Backend | Firebase — Authentication + Cloud Firestore (backup target only) |
-| AI | Google Gemini (one key, one model — receipt OCR *and* text advice) |
-| State | Riverpod |
-| Charts | fl_chart |
+- **Transactions:** record income and expenses, choose a category and date, add a note, and edit or undo a deletion.
+- **Budgets:** set weekly or monthly limits for a category or all spending, with clear approaching-limit and over-budget states.
+- **Reports:** review weekly, monthly and yearly spending, category breakdowns, and trends from locally maintained aggregates.
+- **Receipt scanning:** send a receipt photo to Gemini for extraction, then review and edit the fields before saving.
+- **Spending insights:** generate advice from rounded category totals and trends, with optional follow-up questions.
+- **Rewards:** earn XP, levels, coins and badges for budgeting actions and consistency.
+- **Local control:** use encrypted storage, export data, control AI consent, and clear local records through settings.
+- **Cloud backup:** optionally sign in with Firebase for Firestore backup and restore. Local reads and writes remain independent of sync.
 
-The stack is fixed by the project proposal — see [CLAUDE.md](CLAUDE.md) §2.
+Manual transactions, categories, budgets, reports and rewards work offline once a local session is available. Initial Firebase sign-in, cloud sync and fresh AI requests need connectivity. The sample-data build below provides a local demo session without Firebase.
 
----
+## Run locally
 
-## Architecture in one paragraph
+Use Flutter **3.44.x** with Dart **3.12.2 or newer**, an Android SDK, and an emulator or device running **Android 7.0 / API 24+**. See the [development guide](docs/DEVELOPMENT.md) for Java and Android build setup.
 
-Three layers — **presentation** (Flutter + Riverpod), **domain** (pure entities,
-repository interfaces and logic services), **data** (Hive, Firebase, Gemini,
-repository implementations). Dependencies point inward: `domain/` imports
-nothing from `data/`. Hive is the single source of truth; the UI never reads a
-Firestore stream. Reports and budgets read a maintained `PeriodAggregate` cache,
-so they stay O(periods) rather than O(transactions) as history grows.
-
-Full detail, data flow and a diagram: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
-
+```sh
+git clone https://github.com/AzatKabulov/Spendify.git
+cd Spendify
+flutter pub get --enforce-lockfile
+cp lib/firebase_options.example.dart lib/firebase_options.dart
+flutter devices
+flutter run -d <android-device-id> --dart-define=DEMO_SEED=true
 ```
+
+On PowerShell, replace the copy command with:
+
+```powershell
+Copy-Item lib/firebase_options.example.dart lib/firebase_options.dart
+```
+
+Copy the example only if you do not already have a local Firebase configuration. It contains placeholder values that disable Firebase initialization. Keep your generated `firebase_options.dart` and `google-services.json` out of Git.
+
+`DEMO_SEED=true` is a debug-only option for a fresh install. It adds sample transactions, budgets and rewards, and opens a local demo session. It does not overwrite existing transactions or run in a release build. A normal keyless launch reaches sign-in with authentication unavailable; it does not create a real account. Use a separate emulator for the preview rather than clearing your own data.
+
+### Optional services
+
+| Service | Setup |
+| --- | --- |
+| Firebase Authentication and Firestore backup | [Firebase setup](FIREBASE_SETUP.md) |
+| Gemini receipt scanning, advice and follow-up questions | [AI setup](AI_SETUP.md) |
+| Android release signing | [Release guide](docs/RELEASE.md) |
+
+AI requires a configured key, network access and user consent. A key passed through `--dart-define` is included in the compiled app; it is not a server-side secret. The current client-key approach is a documented capstone limitation. See [security notes](docs/SECURITY_AUDIT.md) before distributing a configured build.
+
+## Architecture
+
+The app uses three layers: presentation, domain, and data. Business rules sit behind repository interfaces, with the domain independent of Hive, Firebase and Flutter UI code.
+
+```mermaid
+flowchart LR
+    UI[Flutter UI and Riverpod] --> Domain[Domain models and repository interfaces]
+    Data[Repository implementations] --> Domain
+    Data --> Local[(Encrypted Hive storage)]
+    Data -. Optional backup and restore .-> Cloud[Firebase Auth and Firestore]
+    Data -. Consent-gated requests .-> AI[Gemini]
+```
+
+Three decisions shape the implementation:
+
+- **Local data comes first.** Hive is the source of truth. Firestore is a backup/restore target, and the UI does not depend on Firestore streams.
+- **Money uses integer minor units.** Values are stored in sen and formatted at the UI boundary.
+- **Reports use cached aggregates.** Transaction changes maintain period totals so report views do not repeatedly scan the entire history.
+
+For AI advice, the app sends aggregated, rounded spending summaries rather than raw transaction rows. Follow-up chat also sends the user's question and a bounded conversation history. Receipt scanning sends the image for extraction and requires confirmation before creating a transaction. [Architecture details](docs/ARCHITECTURE.md).
+
+## Project structure
+
+```text
 lib/
-  core/         constants, typed errors, money utils, theme, dev seeds
-  domain/
-    entities/     plain Dart models (no Hive, no Firebase)
-    repositories/ abstract interfaces + typed exceptions
-    services/     BudgetEvaluator, GamificationEngine, AggregationService … (pure)
-  data/
-    local/        Hive boxes, type adapters, mappers, secure key
-    remote/       Firebase + Gemini clients
-    repositories/ implementations, Sync Manager, aggregate maintenance
-  presentation/
-    screens/  widgets/  providers/
+  core/           Configuration, money utilities, theme, and demo seed
+  domain/         Entities, repository interfaces, and pure business rules
+  data/           Hive storage, remote clients, and repository implementations
+  presentation/   Screens, shared widgets, and Riverpod providers
+test/             Unit, widget, architecture, offline, and journey tests
+integration_test/ Android performance checks
+docs/             Design decisions, validation records, and release notes
 ```
 
----
+## Checks
 
-## Running it
+After completing the local setup:
 
-### Prerequisites
-
-- Flutter 3.44.x (stable), Dart 3.12+
-- Android SDK, an emulator or a device on **Android 7.0 (API 24)** or newer
-- JDK 21 (Temurin) — `flutter config --jdk-dir` if `flutter doctor` can't find it
-
-### First run (no backend needed)
-
-```bash
-flutter pub get
-dart run build_runner build --delete-conflicting-outputs   # Hive adapters
-flutter run
+```sh
+flutter analyze
+flutter test
+flutter test test/dev/demo_seed_test.dart --dart-define=DEMO_SEED=true
 ```
 
-The app builds and runs with **no Firebase and no Gemini key**. Sign-in shows
-"not available in this build", and the AI entry points are hidden. Every other
-feature works.
+See [development commands](docs/DEVELOPMENT.md) for coverage, performance tests and generated adapters. [Test results](docs/TEST_RESULTS.md) contain dated measurements and remaining checks; they are separate from the results of your own checkout.
 
-### Enabling the backend and AI (optional)
+## Status
 
-| To enable | Do this | Guide |
-|---|---|---|
-| Sign-in + cloud backup | create a Firebase project, run `flutterfire configure` | [FIREBASE_SETUP.md](FIREBASE_SETUP.md) |
-| Receipt scan + AI advice | get a Gemini API key, pass `--dart-define=GEMINI_API_KEY=…` | [AI_SETUP.md](AI_SETUP.md) |
+Spendify is a pre-launch capstone project for Android. It currently uses a light theme and English interface. It has no bank connection, payment processing, iOS app or web client. Live-service behavior, physical-device checks and usability testing have their own [manual checklist](docs/MANUAL_TEST_CHECKLIST.md).
 
-```bash
-# with AI enabled:
-flutter run --dart-define=GEMINI_API_KEY=your_key_here
-```
+## Further reading
 
-Neither `google-services.json`, `firebase_options.dart`, nor the Gemini key is
-committed — all are gitignored from Phase 0 (CLAUDE.md §8).
+- [Development guide](docs/DEVELOPMENT.md) — setup, tests, builds and contribution workflow
+- [Architecture](docs/ARCHITECTURE.md) — components, data flow and storage boundaries
+- [Security review](docs/SECURITY_AUDIT.md) — controls and known limitations
+- [Test results](docs/TEST_RESULTS.md) — recorded evidence and open validation
+- [Release guide](docs/RELEASE.md) — signing and distribution checks
+- [Demo script](docs/DEMO_SCRIPT.md) — walkthrough using sample data
 
----
-
-## Tests
-
-```bash
-flutter analyze                       # static analysis — kept clean
-flutter test                          # unit + widget + journey (~380 tests)
-flutter test --coverage               # writes coverage/lcov.info
-flutter test test/performance/        # Dart-VM performance scaling test
-flutter test --tags perf              # (same, explicit)
-```
-
-On-device integration tests (need a running device/emulator):
-
-```bash
-flutter test integration_test/performance_test.dart      # core-action timings, 5000 txns
-```
-
-Measured evidence against the non-functional requirements — performance, offline
-reliability, security, coverage, usability materials — is in
-**[docs/TEST_RESULTS.md](docs/TEST_RESULTS.md)**.
-
----
-
-## Release build
-
-Release signing is configured in [android/app/build.gradle.kts](android/app/build.gradle.kts)
-and reads `android/key.properties` (gitignored). R8 shrinking + obfuscation is on;
-keep rules are in [android/app/proguard-rules.pro](android/app/proguard-rules.pro).
-
-```bash
-flutter build apk --release --dart-define=GEMINI_API_KEY=your_key_here
-```
-
-If `android/key.properties` is missing (fresh clone), the release build falls
-back to debug signing so it still completes — it just isn't shippably signed.
-Regenerating the keystore: see [docs/RELEASE.md](docs/RELEASE.md).
-
----
-
-## Project docs
-
-| Doc | What |
-|---|---|
-| [CLAUDE.md](CLAUDE.md) | authoritative project brief + open decisions |
-| [SPENDIFY_BUILD_PLAN.md](SPENDIFY_BUILD_PLAN.md) | phase-by-phase build plan |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | layers, components, data flow, diagram |
-| [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md) | NFR evidence pack (CP2 §3.2.2) |
-| [docs/SECURITY_AUDIT.md](docs/SECURITY_AUDIT.md) | full security/architecture audit + fixes applied |
-| [docs/MANUAL_TEST_CHECKLIST.md](docs/MANUAL_TEST_CHECKLIST.md) | everything left that needs a live service, a device, or a person |
-| [docs/USABILITY_TEST_PROTOCOL.md](docs/USABILITY_TEST_PROTOCOL.md) | 60-second first-transaction test — run with real participants |
-| [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) | live demo run sheet |
-| [docs/RELEASE.md](docs/RELEASE.md) | signing, keystore, R8, APK checklist |
-| [docs/PHASE_LOG.md](docs/PHASE_LOG.md) | what shipped in each phase |
-| [FIREBASE_SETUP.md](FIREBASE_SETUP.md) / [AI_SETUP.md](AI_SETUP.md) | backend + AI key setup |
+For a bug or suggested improvement, include the screen, reproduction steps, app version and Android version. Use sample records and remove account details from screenshots.
