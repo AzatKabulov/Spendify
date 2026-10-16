@@ -1,5 +1,7 @@
 # Spendify — Test Results (Phase 11)
 
+Repository verification on 2026-10-16 (Windows, Flutter 3.44.2 / Dart 3.12.2): `flutter analyze` passed with no issues; the regular `flutter test` suite passed 466 tests with one flag-gated demo test skipped; that demo test passed separately with `--dart-define=DEMO_SEED=true`. A debug Android APK built without Firebase/Gemini credentials, and Home, Budgets and Reports were reviewed on an isolated API 36 emulator with synthetic records. This run did not remeasure the coverage, performance, live-service or participant-usability results below.
+
 Evidence pack for CP2 §3.1 (testing stage) and §3.2.2 (non-functional
 requirements). Every requirement in `CLAUDE.md §6` has a measured result below,
 pass or fail. Where a target is missed, the number and the analysis are both
